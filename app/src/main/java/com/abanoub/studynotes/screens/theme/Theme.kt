@@ -1,4 +1,4 @@
-package com.abanoub.studynotes.ui.theme
+package com.abanoub.studynotes.screens.theme
 
 import android.app.Activity
 import android.os.Build

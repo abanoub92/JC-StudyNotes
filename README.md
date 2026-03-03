@@ -11,6 +11,9 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Architecture](#architecture)
+- [Domain Models](#domain-models)
+- [Screens & UI Components](#screens--ui-components)
+- [Utility Classes](#utility-classes)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Setup](#setup)
@@ -22,7 +25,7 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 
 ## Overview
 
-**JC Study Notes** is an Android application designed to help users create, manage, and organize their study notes efficiently. The app is built entirely with **Jetpack Compose** for a modern, declarative UI experience, and uses **Room** for persistent local storage.
+**JC Study Notes** is an Android application designed to help students create, manage, and organize their study subjects, tasks, and sessions efficiently. The app is built entirely with **Jetpack Compose** for a modern, declarative UI experience, and uses **Room** for persistent local storage.
 
 - **Package:** `com.abanoub.studynotes`
 - **Min SDK:** 26 (Android 8.0 Oreo)
@@ -33,7 +36,10 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 
 ## ✨ Features
 
-- 📝 Create and manage study notes
+- 📚 Create and manage study **Subjects** with custom gradient colors
+- ✅ Track **Tasks** with priorities (Low / Medium / High) and completion status
+- ⏱️ Log and review **Study Sessions** per subject
+- 📊 Dashboard with live counters (subject count, studied hours, goal hours)
 - 🗃️ Local data persistence with Room Database
 - 🎨 Material 3 design with dynamic color support
 - 🌗 Light & Dark theme support
@@ -69,21 +75,41 @@ JCStudyNotes/
 │   ├── src/
 │   │   └── main/
 │   │       ├── java/com/abanoub/studynotes/
-│   │       │   ├── MainActivity.kt          # App entry point
-│   │       │   └── ui/
-│   │       │       └── theme/
-│   │       │           ├── Color.kt         # Color tokens
-│   │       │           ├── Theme.kt         # App theme definition
-│   │       │           ├── ThemeData.kt     # Light & dark color schemes
-│   │       │           └── Type.kt          # Typography & Google Fonts
-│   │       ├── res/                         # Android resources
+│   │       │   ├── MainActivity.kt                    # App entry point
+│   │       │   ├── domain/
+│   │       │   │   ├── DummyData.kt                   # Sample data for previews & testing
+│   │       │   │   └── model/
+│   │       │   │       ├── Subject.kt                 # Subject domain model
+│   │       │   │       ├── Task.kt                    # Task domain model
+│   │       │   │       └── Session.kt                 # Study session domain model
+│   │       │   ├── screens/
+│   │       │   │   ├── components/
+│   │       │   │   │   ├── CounterCard.kt             # Reusable stat counter card
+│   │       │   │   │   └── TaskCheckbox.kt            # Animated circular task checkbox
+│   │       │   │   ├── landing/
+│   │       │   │   │   ├── LandingScreen.kt           # Main dashboard screen
+│   │       │   │   │   └── composables/
+│   │       │   │   │       ├── LandingTopBar.kt       # Top app bar
+│   │       │   │   │       ├── LandingCounter.kt      # Stats row (subjects/hours)
+│   │       │   │   │       ├── LandingSubjectCards.kt # Horizontal subject card list
+│   │       │   │   │       ├── SubjectCard.kt         # Single gradient subject card
+│   │       │   │   │       ├── LandingTaskList.kt     # Upcoming tasks lazy list
+│   │       │   │   │       └── LandingStudySessionList.kt # Recent sessions lazy list
+│   │       │   │   └── theme/
+│   │       │   │       ├── Color.kt                   # Full Material 3 color tokens
+│   │       │   │       ├── Theme.kt                   # App theme definition
+│   │       │   │       ├── ThemeData.kt               # Light & dark color schemes
+│   │       │   │       └── Type.kt                    # Typography & Google Fonts
+│   │       │   └── util/
+│   │       │       └── Common.kt                      # Priority enum & shared utilities
+│   │       ├── res/                                   # Android resources (drawables, etc.)
 │   │       └── AndroidManifest.xml
-│   └── build.gradle.kts                     # App-level build config
+│   └── build.gradle.kts                               # App-level build config
 ├── gradle/
-│   ├── libs.versions.toml                   # Version catalog (all dependencies)
+│   ├── libs.versions.toml                             # Version catalog (all dependencies)
 │   └── wrapper/
-├── build.gradle.kts                         # Root build config
-└── settings.gradle.kts                      # Project settings
+├── build.gradle.kts                                   # Root build config
+└── settings.gradle.kts                                # Project settings
 ```
 
 ---
@@ -110,8 +136,121 @@ This project follows the **MVVM (Model-View-ViewModel)** pattern combined with *
 ```
 
 - **UI Layer:** Jetpack Compose screens, state holders (ViewModels), and navigation via Compose Destinations.
-- **Domain Layer:** Use cases that encapsulate business logic, keeping the UI and data layers decoupled.
+- **Domain Layer:** Use cases that encapsulate business logic, keeping the UI and data layers decoupled. Contains the core data models (`Subject`, `Task`, `Session`).
 - **Data Layer:** Room database with DAOs and Repository pattern for data access.
+
+---
+
+## 🗂️ Domain Models
+
+### `Subject`
+Represents a study subject the user wants to track.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `Int` | Unique identifier |
+| `name` | `String` | Subject name (e.g. "Physics") |
+| `goalHours` | `Float` | Target study hours for this subject |
+| `colors` | `List<Color>` | Gradient colors for the subject card |
+
+> Comes with 5 built-in gradient presets via `Subject.subjectCardColors`.
+
+---
+
+### `Task`
+Represents a to-do item linked to a subject.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `Int` | Unique identifier |
+| `title` | `String` | Short task title |
+| `description` | `String` | Optional detailed description |
+| `dueDate` | `Long` | Due date as Unix timestamp |
+| `priority` | `Int` | Priority level (0 = Low, 1 = Medium, 2 = High) |
+| `relatedToSubject` | `String` | Name of the associated subject |
+| `isCompleted` | `Boolean` | Completion status |
+| `taskSubjectId` | `Int` | ID of the associated subject |
+
+---
+
+### `Session`
+Represents a single study session log.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `Int` | Unique identifier |
+| `sessionSubjectId` | `Int` | ID of the subject studied |
+| `relatedToSubject` | `String` | Name of the subject studied |
+| `date` | `Long` | Session date as Unix timestamp |
+| `duration` | `Long` | Duration of the session (in hours) |
+
+---
+
+## 🖥️ Screens & UI Components
+
+### Landing Screen (`LandingScreen.kt`)
+The main dashboard of the app. Displays a scrollable summary of the user's study activity.
+
+**Sections (top to bottom):**
+1. **Top App Bar** — Displays the "Study Notes" title.
+2. **Counter Row** — Three `CounterCard`s showing:
+   - Total subject count
+   - Total studied hours
+   - Goal study hours
+3. **Subject Cards** — A horizontal `LazyRow` of gradient `SubjectCard`s with an **Add (+)** button.
+4. **Start Study Session Button** — Full-width CTA button.
+5. **Upcoming Tasks List** — A `LazyColumn` section listing pending tasks with checkboxes.
+6. **Recent Study Sessions List** — A `LazyColumn` section listing past sessions with a delete action.
+
+---
+
+### Shared Components
+
+#### `CounterCard`
+An `ElevatedCard` that displays a single statistic with a title and a large numeric value.
+
+```
+┌──────────────────┐
+│   Subject Count  │
+│        5         │
+└──────────────────┘
+```
+
+#### `TaskCheckbox`
+A custom animated circular checkbox used in task list items. Shows a checkmark icon with an `AnimatedVisibility` transition when a task is completed. Supports a customizable border color driven by the task's `Priority`.
+
+---
+
+### Landing Composables
+
+| Composable | Description |
+|---|---|
+| `LandingTopBar` | Material 3 `TopAppBar` with the app title |
+| `LandingCounter` | Row of three `CounterCard`s for key stats |
+| `LandingSubjectCards` | Header + horizontal scrolling list of `SubjectCard`s |
+| `SubjectCard` | A 150×150dp gradient card showing subject name and a book image |
+| `landingTaskList` | `LazyListScope` extension rendering the task section with empty-state illustration |
+| `landingStudySessionList` | `LazyListScope` extension rendering the session section with empty-state illustration |
+
+---
+
+## 🔧 Utility Classes
+
+### `Priority` (enum)
+Located in `util/Common.kt`. Maps an integer priority value to a human-readable label and a color.
+
+| Enum | Title | Color | Value |
+|---|---|---|---|
+| `LOW` | Low | 🟢 Green | 0 |
+| `MEDIUM` | Medium | 🟠 Orange | 1 |
+| `HIGH` | High | 🔴 Red | 2 |
+
+> Use `Priority.fromInt(value)` to safely convert an `Int` to a `Priority`, defaulting to `MEDIUM` if out of range.
+
+---
+
+### `DummyData` (`domain/DummyData.kt`)
+Provides pre-populated lists of `Subject`, `Task`, and `Session` objects for use in Compose previews and UI development before a real database is wired up.
 
 ---
 
@@ -164,6 +303,18 @@ Custom fonts are loaded using the **Compose Google Fonts** library:
 
 Fonts are fetched at runtime through Google's font provider, so no font files need to be bundled in the APK.
 
+### Subject Gradient Colors
+
+Five gradient presets are defined in `Color.kt` and exposed via `Subject.subjectCardColors`:
+
+| Gradient | Colors |
+|---|---|
+| `gradient1` | Shades of blue |
+| `gradient2` | Shades of purple |
+| `gradient3` | Shades of pink/red |
+| `gradient4` | Shades of teal/green |
+| `gradient5` | Shades of orange |
+
 ---
 
 ## 📦 Dependencies
@@ -177,6 +328,7 @@ All dependencies are managed through the **Gradle Version Catalog** (`gradle/lib
 | AndroidX Core KTX | 1.17.0 |
 | Activity Compose | 1.12.4 |
 | Lifecycle Runtime KTX | 2.10.0 |
+| Lifecycle Runtime Compose | 2.10.0 |
 
 ### Jetpack Compose
 | Library | Version |
@@ -268,4 +420,3 @@ SOFTWARE.
 <div align="center">
   Made with ❤️ using Jetpack Compose
 </div>
-

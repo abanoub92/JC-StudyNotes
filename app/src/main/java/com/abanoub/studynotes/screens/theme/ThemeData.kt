@@ -1,4 +1,4 @@
-package com.abanoub.studynotes.ui.theme
+package com.abanoub.studynotes.screens.theme
 
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
