@@ -13,6 +13,7 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 - [Architecture](#architecture)
 - [Domain Models](#domain-models)
 - [Screens & UI Components](#screens--ui-components)
+- [Dialog Components](#dialog-components)
 - [Utility Classes](#utility-classes)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
@@ -20,6 +21,7 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 - [UI & Theming](#ui--theming)
 - [Dependencies](#dependencies)
 - [Build Configuration](#build-configuration)
+- [Attribution](#attribution)
 
 ---
 
@@ -37,6 +39,8 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 ## ✨ Features
 
 - 📚 Create and manage study **Subjects** with custom gradient colors
+- ➕ **Add/Update Subject dialog** with inline form validation and color picker
+- 🗑️ **Delete confirmation dialog** to safely remove study sessions
 - ✅ Track **Tasks** with priorities (Low / Medium / High) and completion status
 - ⏱️ Log and review **Study Sessions** per subject
 - 📊 Dashboard with live counters (subject count, studied hours, goal hours)
@@ -84,6 +88,8 @@ JCStudyNotes/
 │   │       │   │       └── Session.kt                 # Study session domain model
 │   │       │   ├── screens/
 │   │       │   │   ├── components/
+│   │       │   │   │   ├── AddSubjectDialog.kt        # Dialog to add or update a subject
+│   │       │   │   │   ├── DeleteDialog.kt            # Generic confirmation delete dialog
 │   │       │   │   │   ├── CounterCard.kt             # Reusable stat counter card
 │   │       │   │   │   └── TaskCheckbox.kt            # Animated circular task checkbox
 │   │       │   │   ├── landing/
@@ -191,16 +197,21 @@ Represents a single study session log.
 ### Landing Screen (`LandingScreen.kt`)
 The main dashboard of the app. Displays a scrollable summary of the user's study activity.
 
+**State managed locally:**
+- `isAddSubjectDialogOpen` — controls visibility of the Add Subject dialog
+- `isDeleteDialogOpen` — controls visibility of the Delete Session confirmation dialog
+- `subjectName`, `goalHours`, `selectedColors` — form state passed to `AddSubjectDialog`
+
 **Sections (top to bottom):**
 1. **Top App Bar** — Displays the "Study Notes" title.
 2. **Counter Row** — Three `CounterCard`s showing:
    - Total subject count
    - Total studied hours
    - Goal study hours
-3. **Subject Cards** — A horizontal `LazyRow` of gradient `SubjectCard`s with an **Add (+)** button.
+3. **Subject Cards** — A horizontal `LazyRow` of gradient `SubjectCard`s with an **Add (+)** button that opens `AddSubjectDialog`.
 4. **Start Study Session Button** — Full-width CTA button.
 5. **Upcoming Tasks List** — A `LazyColumn` section listing pending tasks with checkboxes.
-6. **Recent Study Sessions List** — A `LazyColumn` section listing past sessions with a delete action.
+6. **Recent Study Sessions List** — A `LazyColumn` section listing past sessions with a delete action that opens `DeleteDialog`.
 
 ---
 
@@ -218,6 +229,58 @@ An `ElevatedCard` that displays a single statistic with a title and a large nume
 
 #### `TaskCheckbox`
 A custom animated circular checkbox used in task list items. Shows a checkmark icon with an `AnimatedVisibility` transition when a task is completed. Supports a customizable border color driven by the task's `Priority`.
+
+---
+
+## 🗨️ Dialog Components
+
+### `AddSubjectDialog`
+A Material 3 `AlertDialog` used for creating or updating a study subject.
+
+**Features:**
+- **Color picker row** — displays the 5 gradient presets from `Subject.subjectCardColors` as circular swatches; the selected one is highlighted with a black border.
+- **Subject Name field** — `OutlinedTextField` with inline validation:
+  - Cannot be blank
+  - Must be between 2 and 20 characters
+- **Goal Study Hours field** — `OutlinedTextField` with numeric keyboard and inline validation:
+  - Cannot be blank
+  - Must be a valid number between 1 and 1000
+- Errors are shown as supporting text and only displayed once the user has started typing.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `isOpen` | `Boolean` | Controls dialog visibility |
+| `title` | `String` | Dialog title (default: `"Add/Update Subject"`) |
+| `selectedColors` | `List<Color>` | Currently selected gradient |
+| `subjectName` | `String` | Current subject name input |
+| `goalHours` | `String` | Current goal hours input |
+| `onColorChange` | `(List<Color>) -> Unit` | Called when a color swatch is tapped |
+| `onSubjectNameChange` | `(String) -> Unit` | Called on name text change |
+| `onGoalHoursChange` | `(String) -> Unit` | Called on hours text change |
+| `onDismissRequest` | `() -> Unit` | Called when dialog is dismissed |
+| `onConfirmButtonClick` | `() -> Unit` | Called when the Save/Confirm button is clicked |
+
+---
+
+### `DeleteDialog`
+A generic Material 3 `AlertDialog` for confirming a destructive action (e.g., deleting a study session).
+
+**Features:**
+- Configurable `title` and `description` text
+- **Delete** confirm button and **Cancel** dismiss button
+- Reusable for any delete confirmation across the app
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `isOpen` | `Boolean` | Controls dialog visibility |
+| `title` | `String` | Dialog title |
+| `description` | `String` | Warning message shown to the user |
+| `onDismissRequest` | `() -> Unit` | Called when dialog is dismissed |
+| `onConfirmButtonClick` | `() -> Unit` | Called when the Delete button is clicked |
 
 ---
 
@@ -414,6 +477,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+---
+
+## 🙏 Attribution
+
+This project is based on the **[StudySmart](https://github.com/kotstantin-dev/StudySmart)** project by **[kotlang-dev](https://github.com/kotlang-dev)**.  
+All original concepts, design patterns, and architectural ideas are credited to the original author.  
+This repository is a personal study and learning adaptation of that work.
 
 ---
 

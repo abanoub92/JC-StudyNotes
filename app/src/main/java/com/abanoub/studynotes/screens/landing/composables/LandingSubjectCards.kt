@@ -28,7 +28,8 @@ import com.abanoub.studynotes.domain.model.Subject
 fun LandingSubjectCards(
     modifier: Modifier,
     subjectList: List<Subject>,
-    emptyListText: String = "You don't have any subject.\n Click the + button to add new subject."
+    emptyListText: String = "You don't have any subject.\n Click the + button to add new subject.",
+    onAddButtonClicked: () -> Unit
 ){
     Column(modifier = modifier) {
         Row(
@@ -43,7 +44,7 @@ fun LandingSubjectCards(
             )
 
             IconButton(
-                onClick = {}
+                onClick = { onAddButtonClicked() }
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_add),
