@@ -27,8 +27,8 @@ import com.abanoub.studynotes.screens.components.DeleteDialog
 import com.abanoub.studynotes.screens.landing.composables.LandingCounter
 import com.abanoub.studynotes.screens.landing.composables.LandingSubjectCards
 import com.abanoub.studynotes.screens.landing.composables.LandingTopBar
-import com.abanoub.studynotes.screens.landing.composables.landingStudySessionList
-import com.abanoub.studynotes.screens.landing.composables.landingTaskList
+import com.abanoub.studynotes.screens.components.studySessionList
+import com.abanoub.studynotes.screens.components.taskList
 
 @Composable
 fun LandingScreen(){
@@ -100,7 +100,7 @@ fun LandingScreen(){
                 }
             }
 
-            landingTaskList(
+            taskList(
                 title = "UPCOMING TASKS",
                 emptyListText = "You don't have any upcoming tasks.\n" +
                         "Click the + button in subject screen to add new task.",
@@ -111,7 +111,7 @@ fun LandingScreen(){
 
             item { Spacer(modifier = Modifier.padding(20.dp)) }
 
-            landingStudySessionList(
+            studySessionList(
                 title = "RECENT STUDY SESSIONS",
                 emptyListText = "You don't have any recent study sessions.\n" +
                         "Start a study session to begin recording your progress.",
