@@ -53,6 +53,9 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.lifecycle.runtime.compose)
 
+    implementation(libs.navigation.ui)
+    implementation(libs.navigation.compose)
+
     implementation(libs.google.hilt.android)
     ksp(libs.google.hilt.compiler)
     implementation(libs.androidx.hilt.navigation)
@@ -63,9 +66,6 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.androidx.google.fonts)
-
-    implementation(libs.compose.destinations.core)
-    ksp(libs.compose.destinations.ksp)
 
     coreLibraryDesugaring(libs.android.desugar.jdk)
 

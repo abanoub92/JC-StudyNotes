@@ -11,6 +11,7 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Architecture](#architecture)
+- [Navigation](#navigation)
 - [Domain Models](#domain-models)
 - [Screens & UI Components](#screens--ui-components)
   - [Landing Screen](#landing-screen-landingscreenkt)
@@ -57,7 +58,7 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 - 🎨 Material 3 design with dynamic color support
 - 🌗 Light & Dark theme support
 - 🔤 Custom Google Fonts (Ubuntu & Salsa)
-- 🧭 Type-safe navigation with Compose Destinations
+- 🧭 Type-safe navigation with **AndroidX Navigation Compose** (`NavHost` + sealed `NavRoutes`)
 - 💉 Dependency injection with Dagger Hilt
 - ⚡ Edge-to-edge UI experience
 
@@ -70,7 +71,7 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 | Language | Kotlin |
 | UI Framework | Jetpack Compose |
 | Design System | Material 3 |
-| Navigation | Compose Destinations |
+| Navigation | AndroidX Navigation Compose |
 | Dependency Injection | Dagger Hilt |
 | Local Database | Room |
 | Architecture | MVVM + Clean Architecture |
@@ -89,6 +90,9 @@ JCStudyNotes/
 │   │   └── main/
 │   │       ├── java/com/abanoub/studynotes/
 │   │       │   ├── MainActivity.kt                    # App entry point
+│   │       │   ├── navigation/
+│   │       │   │   ├── NavRoutes.kt                   # Sealed class defining all 4 navigation routes
+│   │       │   │   └── Navigation.kt                  # NavHost composable wiring all screens
 │   │       │   ├── domain/
 │   │       │   │   ├── DummyData.kt                   # Sample data for previews & testing
 │   │       │   │   └── model/
@@ -170,9 +174,40 @@ This project follows the **MVVM (Model-View-ViewModel)** pattern combined with *
 └─────────────────────────────────────────┘
 ```
 
-- **UI Layer:** Jetpack Compose screens, state holders (ViewModels), and navigation via Compose Destinations.
+- **UI Layer:** Jetpack Compose screens, state holders (ViewModels), and navigation via **AndroidX Navigation Compose**.
 - **Domain Layer:** Use cases that encapsulate business logic, keeping the UI and data layers decoupled. Contains the core data models (`Subject`, `Task`, `Session`).
 - **Data Layer:** Room database with DAOs and Repository pattern for data access.
+
+---
+
+## 🧭 Navigation
+
+Navigation is implemented with **AndroidX Navigation Compose** (`androidx.navigation:navigation-compose`). All routes are defined as a sealed class and wired in a single `NavHost` composable.
+
+### `NavRoutes` (sealed class)
+
+| Route Object | Route Pattern | Arguments |
+|---|---|---|
+| `LandingRoute` | `"landing"` | — |
+| `SubjectRoute` | `"subject/{subjectId}"` | `subjectId: Int?` |
+| `TaskRoute` | `"task/{taskId}/{subjectId}"` | `taskId: Int?`, `subjectId: Int?` |
+| `SessionRoute` | `"session"` | — |
+
+`SubjectRoute` and `TaskRoute` expose a `createRoute(...)` helper function to build the full route string with arguments.
+
+### `NavHost` composable (`Navigation.kt`)
+
+A top-level composable called directly from `MainActivity`. It:
+- Creates a `NavController` via `rememberNavController()`
+- Sets `LandingRoute` as the start destination
+- Wires each screen with the appropriate navigation callbacks:
+
+| Screen | Navigation callbacks |
+|---|---|
+| `LandingScreen` | `onSubjectCardClicked`, `onTaskCardClicked`, `onStartSessionButtonClicked` |
+| `SubjectScreen` | `onBackButtonClicked`, `onAddTaskButtonClicked`, `onTaskCardClicked` |
+| `TaskScreen` | `onBackButtonClicked` |
+| `SessionScreen` | `onBackButtonClicked` |
 
 ---
 
@@ -583,7 +618,7 @@ All dependencies are managed through the **Gradle Version Catalog** (`gradle/lib
 ### Navigation
 | Library | Version |
 |---|---|
-| Compose Destinations | 2.3.0 |
+| AndroidX Navigation Compose | 2.9.7 |
 
 ### Dependency Injection
 | Library | Version |
@@ -628,7 +663,6 @@ All dependencies are managed through the **Gradle Version Catalog** (`gradle/lib
 The project uses **Kotlin Symbol Processing (KSP)** for annotation processing, which is faster than KAPT. KSP is used by:
 - **Room** — generates database boilerplate
 - **Hilt** — generates DI components
-- **Compose Destinations** — generates type-safe navigation code
 
 ---
 

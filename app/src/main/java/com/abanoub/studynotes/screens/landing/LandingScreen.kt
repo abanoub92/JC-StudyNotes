@@ -31,7 +31,11 @@ import com.abanoub.studynotes.screens.components.studySessionList
 import com.abanoub.studynotes.screens.components.taskList
 
 @Composable
-fun LandingScreen(){
+fun LandingScreen(
+    onSubjectCardClicked: (Int?) -> Unit,
+    onTaskCardClicked: (Int?) -> Unit,
+    onStartSessionButtonClicked: () -> Unit,
+){
 
     val scrollState = rememberLazyListState()
 
@@ -86,13 +90,14 @@ fun LandingScreen(){
                 LandingSubjectCards(
                     modifier = Modifier.fillMaxWidth(),
                     subjectList = subjects,
-                    onAddButtonClicked = { isAddSubjectDialogOpen = true }
+                    onAddButtonClicked = { isAddSubjectDialogOpen = true },
+                    onSubjectClicked = onSubjectCardClicked
                 )
             }
 
             item {
                 Button(
-                    onClick = {},
+                    onClick = onStartSessionButtonClicked,
                     modifier = Modifier.fillMaxWidth()
                         .padding(horizontal = 48.dp, vertical = 20.dp)
                 ) {
@@ -105,7 +110,7 @@ fun LandingScreen(){
                 emptyListText = "You don't have any upcoming tasks.\n" +
                         "Click the + button in subject screen to add new task.",
                 taskList = tasks,
-                onTaskClicked = {},
+                onTaskClicked = onTaskCardClicked,
                 onCheckboxClicked = {}
             )
 
@@ -126,7 +131,11 @@ fun LandingScreen(){
 @Preview(showBackground = true)
 @Composable
 fun LandingScreenPreview(){
-    LandingScreen()
+    LandingScreen(
+        onSubjectCardClicked = {},
+        onTaskCardClicked = {},
+        onStartSessionButtonClicked = {}
+    )
 }
 
 

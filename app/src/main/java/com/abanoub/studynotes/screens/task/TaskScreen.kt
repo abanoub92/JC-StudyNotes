@@ -50,7 +50,9 @@ import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskScreen(){
+fun TaskScreen(
+    onBackButtonClicked: () -> Unit
+){
 
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
@@ -124,7 +126,7 @@ fun TaskScreen(){
                 isTaskExist = true,
                 isCompleted = false,
                 checkboxBorderColor = Color.Red,
-                onBackButtonClick = {},
+                onBackButtonClick = onBackButtonClicked,
                 onDeleteButtonClick = { isDeleteTaskDialogOpen = true },
                 onCheckboxClick = {}
             )
@@ -256,5 +258,7 @@ fun TaskScreen(){
 @Preview(showBackground = true)
 @Composable
 fun TaskScreenPreview(){
-    TaskScreen()
+    TaskScreen(
+        onBackButtonClicked = {}
+    )
 }

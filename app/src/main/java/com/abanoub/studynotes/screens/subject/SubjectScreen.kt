@@ -37,7 +37,11 @@ import com.abanoub.studynotes.screens.subject.composables.subjectOverview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SubjectScreen(){
+fun SubjectScreen(
+    onBackButtonClicked: () -> Unit,
+    onAddTaskButtonClicked: () -> Unit,
+    onTaskCardClicked: (Int?) -> Unit
+){
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val listState = rememberLazyListState()
@@ -90,7 +94,7 @@ fun SubjectScreen(){
             SubjectTopBar(
                 scrollBehavior = scrollBehavior,
                 title = "English",
-                onBackClicked = {},
+                onBackClicked = onBackButtonClicked,
                 onEditClicked = { isEditSubjectDialogOpen = true },
                 onDeleteClicked = { isDeleteSubjectDialogOpen = true }
             )
@@ -98,7 +102,7 @@ fun SubjectScreen(){
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 expanded = isFabExtended,
-                onClick = {  },
+                onClick = onAddTaskButtonClicked,
                 icon = {
                     Icon(
                         painter = painterResource(R.drawable.ic_add),
@@ -130,7 +134,7 @@ fun SubjectScreen(){
                 emptyListText = "You don't have any upcoming tasks.\n" +
                         "Click the + button to add new task.",
                 taskList = tasks,
-                onTaskClicked = {},
+                onTaskClicked = onTaskCardClicked,
                 onCheckboxClicked = {}
             )
 
@@ -141,7 +145,7 @@ fun SubjectScreen(){
                 emptyListText = "You don't have any completed tasks.\n" +
                         "Click the check box on completion of task.",
                 taskList = tasks,
-                onTaskClicked = {},
+                onTaskClicked = onTaskCardClicked,
                 onCheckboxClicked = {}
             )
 
@@ -163,5 +167,9 @@ fun SubjectScreen(){
 @Preview(showBackground = true)
 @Composable
 fun SubjectScreenPreview(){
-    SubjectScreen()
+    SubjectScreen(
+        onBackButtonClicked = {},
+        onAddTaskButtonClicked = {},
+        onTaskCardClicked = {}
+    )
 }

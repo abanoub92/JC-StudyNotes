@@ -33,7 +33,9 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SessionScreen() {
+fun SessionScreen(
+    onBackButtonClicked: () -> Unit
+) {
 
     val scope = rememberCoroutineScope()
 
@@ -69,7 +71,7 @@ fun SessionScreen() {
     Scaffold(
         topBar = {
             SessionTopBar(
-                onBackButtonClick = {}
+                onBackButtonClick = onBackButtonClicked
             )
         }
     ) {
@@ -117,5 +119,7 @@ fun SessionScreen() {
 @Preview(showBackground = true)
 @Composable
 fun SessionScreenPreview(){
-    SessionScreen()
+    SessionScreen(
+        onBackButtonClicked = {}
+    )
 }

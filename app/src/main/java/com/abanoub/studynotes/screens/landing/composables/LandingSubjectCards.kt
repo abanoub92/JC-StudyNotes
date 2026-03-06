@@ -29,7 +29,8 @@ fun LandingSubjectCards(
     modifier: Modifier,
     subjectList: List<Subject>,
     emptyListText: String = "You don't have any subject.\n Click the + button to add new subject.",
-    onAddButtonClicked: () -> Unit
+    onAddButtonClicked: () -> Unit,
+    onSubjectClicked: (Int?) -> Unit
 ){
     Column(modifier = modifier) {
         Row(
@@ -77,8 +78,9 @@ fun LandingSubjectCards(
             items(subjectList){ subject ->
                 SubjectCard(
                     subjectName = subject.name,
-                    gradientColors = subject.colors
-                ) { }
+                    gradientColors = subject.colors,
+                    onClick = { onSubjectClicked(subject.id) }
+                )
             }
         }
     }
