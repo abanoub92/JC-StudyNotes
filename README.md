@@ -16,6 +16,7 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
   - [Landing Screen](#landing-screen-landingscreenkt)
   - [Subject Screen](#subject-screen-subjectscreenkt)
   - [Task Screen](#task-screen-taskscreenkt)
+  - [Session Screen](#session-screen-sessionscreenkt)
   - [Shared Components](#shared-components)
 - [Dialog Components](#dialog-components)
 - [Utility Classes](#utility-classes)
@@ -49,6 +50,8 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 - 📋 Dedicated **Subject Screen** with collapsing top bar, goal/progress overview, and per-subject task & session lists
 - 📝 **Task Screen** to create or edit tasks — with title/description fields, due date picker, priority selector, and subject linking
 - ⏱️ Log and review **Study Sessions** per subject
+- ⏲️ Dedicated **Session Screen** with a live countdown timer, subject selector bottom sheet, Start / Cancel / Finish controls, and a session history list
+- 📅 Material 3 **Date Picker** dialog in the Task Screen with future-only date validation
 - 📊 Dashboard with live counters (subject count, studied hours, goal hours)
 - 🗃️ Local data persistence with Room Database
 - 🎨 Material 3 design with dynamic color support
@@ -99,7 +102,8 @@ JCStudyNotes/
 │   │       │   │   │   ├── CounterCard.kt             # Reusable stat counter card
 │   │       │   │   │   ├── TaskCheckbox.kt            # Animated circular task checkbox
 │   │       │   │   │   ├── TaskList.kt                # Shared LazyListScope task list extension
-│   │       │   │   │   └── StudySessionList.kt        # Shared LazyListScope session list extension
+│   │       │   │   │   ├── StudySessionList.kt        # Shared LazyListScope session list extension
+│   │       │   │   │   └── SubjectListBottomSheet.kt  # Modal bottom sheet for picking a subject
 │   │       │   │   ├── landing/
 │   │       │   │   │   ├── LandingScreen.kt           # Main dashboard screen
 │   │       │   │   │   └── composables/
@@ -108,23 +112,31 @@ JCStudyNotes/
 │   │       │   │   │       ├── LandingSubjectCards.kt # Horizontal subject card list
 │   │       │   │   │       ├── SubjectCard.kt         # Single gradient subject card
 │   │       │   │   │       └── LandingTaskList.kt     # Landing-specific task list composable
-│   │       │   │   └── subject/
-│   │       │   │       ├── SubjectScreen.kt           # Per-subject detail screen
-│   │       │   │       └── composables/
-│   │       │   │           ├── SubjectTopBar.kt       # Collapsing large top bar with actions
-│   │       │   │           └── SubjectOverview.kt     # Goal/studied hours + circular progress
-│   │       │   │   └── task/
-│   │       │   │       ├── TaskScreen.kt              # Create / edit task screen
-│   │       │   │       └── composables/
-│   │       │   │           ├── TaskTopBar.kt          # Top bar with checkbox & delete actions
-│   │       │   │           └── PriorityButton.kt      # Colored priority selector button
-│   │       │   ├── theme/
-│   │       │   │   ├── Color.kt                       # Full Material 3 color tokens
-│   │       │   │   ├── Theme.kt                       # App theme definition
-│   │       │   │   ├── ThemeData.kt                   # Light & dark color schemes
-│   │       │   │   └── Type.kt                        # Typography & Google Fonts
+│   │       │   │   ├── subject/
+│   │       │   │   │   ├── SubjectScreen.kt           # Per-subject detail screen
+│   │       │   │   │   └── composables/
+│   │       │   │   │       ├── SubjectTopBar.kt       # Collapsing large top bar with actions
+│   │       │   │   │       └── SubjectOverview.kt     # Goal/studied hours + circular progress
+│   │       │   │   ├── task/
+│   │       │   │   │   ├── TaskScreen.kt              # Create / edit task screen
+│   │       │   │   │   └── composables/
+│   │       │   │   │       ├── TaskTopBar.kt          # Top bar with checkbox & delete actions
+│   │       │   │   │       ├── PriorityButton.kt      # Colored priority selector button
+│   │       │   │   │       └── TaskDatePicker.kt      # Material 3 date picker dialog wrapper
+│   │       │   │   ├── session/
+│   │       │   │   │   ├── SessionScreen.kt           # Active study session screen
+│   │       │   │   │   └── composables/
+│   │       │   │   │       ├── SessionTopBar.kt       # Top bar with back navigation
+│   │       │   │   │       ├── SessionTimer.kt        # Circular countdown timer display
+│   │       │   │   │       ├── SessionRelatedToSubject.kt # Subject selector row
+│   │       │   │   │       └── SessionButtons.kt      # Start / Cancel / Finish button row
+│   │       │   │   └── theme/
+│   │       │   │       ├── Color.kt                   # Full Material 3 color tokens
+│   │       │   │       ├── Theme.kt                   # App theme definition
+│   │       │   │       ├── ThemeData.kt               # Light & dark color schemes
+│   │       │   │       └── Type.kt                    # Typography & Google Fonts
 │   │       │   └── util/
-│   │       │       └── Common.kt                      # Priority enum & shared utilities
+│   │       │       └── Common.kt                      # Priority enum, changeMillisToDateString & shared utilities
 │   │       ├── res/                                   # Android resources (drawables, etc.)
 │   │       └── AndroidManifest.xml
 │   └── build.gradle.kts                               # App-level build config
@@ -280,6 +292,27 @@ A form screen for creating a new task or editing an existing one. Navigated to f
 
 ---
 
+### Session Screen (`SessionScreen.kt`)
+A dedicated screen for running and logging an active study session. Navigated to via the "Start Study Session" button on the Landing Screen.
+
+**State managed locally:**
+- `isSubjectBottomSheetOpen` — controls visibility of the `SubjectListBottomSheet`
+- `relatedToSubject` — the name of the subject currently linked to the session
+- `isDeleteSessionDialogOpen` — controls visibility of the Delete Session confirmation dialog
+
+**Behavior:**
+- Uses `rememberModalBottomSheetState` to drive the subject picker sheet
+- Hides the bottom sheet with an animation via `bottomSheetState.hide()` on subject selection
+
+**Sections (top to bottom):**
+1. **Top Bar** (`SessionTopBar`) — Shows "Study Session" title with a back navigation button.
+2. **Timer** (`sessionTimer`) — A large square `AspectRatio(1f)` area containing a `250dp` circular border and a centered time display (e.g. `00:05:32`).
+3. **Related to Subject** (`sessionRelatedToSubject`) — Shows the currently selected subject name with a dropdown arrow `IconButton` that opens the `SubjectListBottomSheet`.
+4. **Session Buttons** (`sessionButtons`) — A horizontal row with three equal-weight buttons: **Cancel**, **Start**, and **Finish**.
+5. **Session History** — Shared `studySessionList` extension rendering the session history with per-row delete action that opens `DeleteDialog`.
+
+---
+
 ### Shared Components
 
 #### `CounterCard`
@@ -320,7 +353,24 @@ Located in `screens/components/StudySessionList.kt`. Renders a titled, scrollabl
 | `emptyListText` | `String` | Message shown when list is empty |
 | `onDeleteSession` | `(Session) -> Unit` | Called when the delete icon is tapped |
 
+#### `SubjectListBottomSheet`
+A Material 3 `ModalBottomSheet` used to pick a subject from a scrollable list. Used in both `TaskScreen` and `SessionScreen`.
 
+**Features:**
+- Animated drag handle with a configurable title above a `HorizontalDivider`
+- `LazyColumn` of clickable subject rows
+- Shows a prompt message (`"Ready to begin? First, add a subject."`) when the subject list is empty
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `sheetState` | `SheetState` | Controls sheet expand/collapse animation |
+| `isOpen` | `Boolean` | Controls sheet visibility |
+| `subjects` | `List<Subject>` | Subjects to display in the list |
+| `bottomSheetTitle` | `String` | Header title (default: `"Related to subject"`) |
+| `onSubjectClicked` | `(Subject) -> Unit` | Called when a subject row is tapped |
+| `onDismissRequest` | `() -> Unit` | Called when the sheet is dismissed |
 
 ---
 
@@ -401,6 +451,16 @@ A generic Material 3 `AlertDialog` for confirming a destructive action (e.g., de
 |---|---|
 | `TaskTopBar` | Material 3 `TopAppBar` showing "Task" title, back navigation, and — when editing — a `TaskCheckbox` toggle and a delete action button |
 | `PriorityButton` | A colored, clickable `Box` used as a pill-style priority selector; highlights the selected priority with a rounded white border |
+| `TaskDatePicker` | A Material 3 `DatePickerDialog` wrapper with configurable confirm/dismiss button labels; only selectable dates from today onward (`SelectableDates` validation) |
+
+### Session Composables
+
+| Composable | Description |
+|---|---|
+| `SessionTopBar` | Material 3 `TopAppBar` showing "Study Session" title and a back navigation button |
+| `sessionTimer` | `LazyListScope` extension rendering a square `AspectRatio(1f)` area with a `250dp` circular border and a large centered timer text |
+| `sessionRelatedToSubject` | `LazyListScope` extension rendering a labelled row showing the currently selected subject with a dropdown `IconButton` to open the subject picker sheet |
+| `sessionButtons` | `LazyListScope` extension rendering a horizontal row of three equal-width `Button`s: **Cancel**, **Start**, and **Finish** |
 
 ---
 
@@ -416,6 +476,19 @@ Located in `util/Common.kt`. Maps an integer priority value to a human-readable 
 | `HIGH` | High | 🔴 Red | 2 |
 
 > Use `Priority.fromInt(value)` to safely convert an `Int` to a `Priority`, defaulting to `MEDIUM` if out of range.
+
+---
+
+### `changeMillisToDateString` (extension function)
+Located in `util/Common.kt`. Converts a nullable `Long` Unix timestamp (milliseconds) to a human-readable date string formatted as `dd MMM yyyy` (e.g. `06 Mar 2026`).
+
+- If the value is `null`, it defaults to the **current date**.
+- Uses `java.time` APIs (requires core library desugaring for API < 26).
+
+```kotlin
+// Example usage
+datePickerState.selectedDateMillis.changeMillisToDateString() // "06 Mar 2026"
+```
 
 ---
 

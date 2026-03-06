@@ -11,16 +11,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -31,19 +36,27 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.abanoub.studynotes.screens.task.composables.TaskTopBar
 import com.abanoub.studynotes.R
+import com.abanoub.studynotes.domain.subjects
 import com.abanoub.studynotes.screens.components.DeleteDialog
 import com.abanoub.studynotes.screens.task.composables.PriorityButton
+import com.abanoub.studynotes.screens.components.SubjectListBottomSheet
+import com.abanoub.studynotes.screens.task.composables.TaskDatePicker
 import com.abanoub.studynotes.util.Priority
+import com.abanoub.studynotes.util.changeMillisToDateString
+import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskScreen(){
 
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
 
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-
-    var isDeleteTaskDialogOpen by rememberSaveable { mutableStateOf(false) }
 
     var taskTitleError by rememberSaveable { mutableStateOf<String?>(null) }
     taskTitleError = when {
@@ -53,6 +66,26 @@ fun TaskScreen(){
         else -> null
     }
 
+    var isDeleteTaskDialogOpen by rememberSaveable { mutableStateOf(false) }
+
+    var isDatePickerDialogOpen by rememberSaveable { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = Instant.now().toEpochMilli(),
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                val selectDate = Instant.ofEpochMilli(utcTimeMillis)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+                val currentDate = LocalDate.now(ZoneId.systemDefault())
+                return selectDate >= currentDate
+            }
+        }
+    )
+
+    var isSubjectBottomSheetOpen by rememberSaveable { mutableStateOf(false) }
+    val bottomSheetState = rememberModalBottomSheetState()
+    var relatedToSubject by remember { mutableStateOf("") }
+
     DeleteDialog(
         isOpen = isDeleteTaskDialogOpen,
         title = "Delete Task",
@@ -61,6 +94,29 @@ fun TaskScreen(){
         onDismissRequest = { isDeleteTaskDialogOpen = false },
         onConfirmButtonClick = { isDeleteTaskDialogOpen = false }
     )
+
+    TaskDatePicker(
+        isOpen = isDatePickerDialogOpen,
+        state = datePickerState,
+        onDismissRequest = { isDatePickerDialogOpen = false },
+        onConfirmButtonClicked = {
+            isDatePickerDialogOpen = false
+        }
+    )
+
+    SubjectListBottomSheet(
+        sheetState = bottomSheetState,
+        isOpen = isSubjectBottomSheetOpen,
+        subjects = subjects,
+        onSubjectClicked = {
+            relatedToSubject = it.name
+            scope.launch { bottomSheetState.hide() }.invokeOnCompletion {
+                if (!bottomSheetState.isVisible) isSubjectBottomSheetOpen = false
+            }
+        },
+        onDismissRequest = { isSubjectBottomSheetOpen = false }
+    )
+
 
     Scaffold(
         topBar = {
@@ -113,12 +169,12 @@ fun TaskScreen(){
             ) {
 
                 Text(
-                    text = "5 March, 2026",
+                    text = datePickerState.selectedDateMillis.changeMillisToDateString(),
                     style = MaterialTheme.typography.bodyLarge
                 )
 
                 IconButton(
-                    onClick = {}
+                    onClick = { isDatePickerDialogOpen = true }
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_date_range),
@@ -169,12 +225,12 @@ fun TaskScreen(){
             ) {
 
                 Text(
-                    text = "Test data",
+                    text = relatedToSubject,
                     style = MaterialTheme.typography.bodyLarge
                 )
 
                 IconButton(
-                    onClick = {}
+                    onClick = { isSubjectBottomSheetOpen = true }
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_arrow_drop_down),
