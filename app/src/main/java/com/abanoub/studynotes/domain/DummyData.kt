@@ -5,11 +5,11 @@ import com.abanoub.studynotes.domain.model.Subject
 import com.abanoub.studynotes.domain.model.Task
 
 val subjects = listOf(
-    Subject(id = 0, name = "English", goalHours = 10f, colors = Subject.subjectCardColors[0]),
-    Subject(id = 0, name = "Physics", goalHours = 10f, colors = Subject.subjectCardColors[1]),
-    Subject(id = 0, name = "Maths", goalHours = 10f, colors = Subject.subjectCardColors[2]),
-    Subject(id = 0, name = "Geology", goalHours = 10f, colors = Subject.subjectCardColors[3]),
-    Subject(id = 0, name = "Fine Arts", goalHours = 10f, colors = Subject.subjectCardColors[4]),
+    Subject(id = 0, name = "English", goalHours = 10f, colors = Subject.toColorIntList(Subject.subjectCardColors[0])),
+    Subject(id = 0, name = "Physics", goalHours = 10f, colors = Subject.toColorIntList(Subject.subjectCardColors[1])),
+    Subject(id = 0, name = "Maths", goalHours = 10f, colors = Subject.toColorIntList(Subject.subjectCardColors[2])),
+    Subject(id = 0, name = "Geology", goalHours = 10f, colors = Subject.toColorIntList(Subject.subjectCardColors[3])),
+    Subject(id = 0, name = "Fine Arts", goalHours = 10f, colors = Subject.toColorIntList(Subject.subjectCardColors[4])),
 )
 
 val tasks = listOf(

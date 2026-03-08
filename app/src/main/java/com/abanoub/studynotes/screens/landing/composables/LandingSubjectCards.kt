@@ -78,7 +78,7 @@ fun LandingSubjectCards(
             items(subjectList){ subject ->
                 SubjectCard(
                     subjectName = subject.name,
-                    gradientColors = subject.colors,
+                    gradientColors = Subject.toColorList(subject.colors),
                     onClick = { onSubjectClicked(subject.id) }
                 )
             }

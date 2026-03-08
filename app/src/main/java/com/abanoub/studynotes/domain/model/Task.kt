@@ -1,12 +1,17 @@
 package com.abanoub.studynotes.domain.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity
 data class Task(
-    val id: Int,
     val title: String,
     val description: String,
     val dueDate: Long,
     val priority: Int,
     val relatedToSubject: String,
     val isCompleted: Boolean,
-    val taskSubjectId: Int
+    val taskSubjectId: Int,
+    @PrimaryKey(autoGenerate = true)
+    val id: Int? = null
 )

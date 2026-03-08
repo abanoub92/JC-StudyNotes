@@ -1,5 +1,16 @@
 # 📓 JC Study Notes
 
+<div align="center">
+
+![Android](https://img.shields.io/badge/Platform-Android-3DDC84?style=flat&logo=android&logoColor=white)
+![Kotlin](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=flat&logo=kotlin&logoColor=white)
+![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4?style=flat&logo=jetpackcompose&logoColor=white)
+![Min SDK](https://img.shields.io/badge/Min%20SDK-26-brightgreen?style=flat)
+![Target SDK](https://img.shields.io/badge/Target%20SDK-36-blue?style=flat)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=flat)
+
+</div>
+
 A modern **Android note-taking application** built with **Jetpack Compose**, following clean architecture principles and leveraging the latest Android development stack.
 
 ---
@@ -8,11 +19,22 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 
 - [Overview](#overview)
 - [Features](#features)
+- [Screenshots](#screenshots)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Architecture](#architecture)
 - [Navigation](#navigation)
 - [Domain Models](#domain-models)
+- [Domain Repositories](#domain-repositories)
+- [Data Layer](#data-layer)
+  - [AppDatabase](#appdatabase)
+  - [DAOs](#daos)
+  - [Repository Implementations](#repository-implementations)
+  - [ColorListConverter](#colorlistconverter)
+- [Dependency Injection](#dependency-injection)
+  - [DatabaseModule](#databasemodule)
+  - [RepositoryModule](#repositorymodule)
+- [ViewModels](#viewmodels)
 - [Screens & UI Components](#screens--ui-components)
   - [Landing Screen](#landing-screen-landingscreenkt)
   - [Subject Screen](#subject-screen-subjectscreenkt)
@@ -27,6 +49,7 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 - [UI & Theming](#ui--theming)
 - [Dependencies](#dependencies)
 - [Build Configuration](#build-configuration)
+- [License](#license)
 - [Attribution](#attribution)
 
 ---
@@ -64,6 +87,19 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 
 ---
 
+## 📸 Screenshots
+
+> 🎨 **Visual Preview Coming Soon**  
+> Screenshots showcasing the Landing Screen, Subject Details, Task Management, and Session Timer will be added here.
+
+The app features:
+- **Material 3 Design** with dynamic colors
+- **Smooth animations** and transitions
+- **Intuitive navigation** between screens
+- **Responsive layouts** optimized for various screen sizes
+
+---
+
 ## 🛠️ Tech Stack
 
 | Category | Technology |
@@ -89,16 +125,35 @@ JCStudyNotes/
 │   ├── src/
 │   │   └── main/
 │   │       ├── java/com/abanoub/studynotes/
-│   │       │   ├── MainActivity.kt                    # App entry point
+│   │       │   ├── MainActivity.kt                    # App entry point, sets up NavHost
+│   │       │   ├── StudyNotesApp.kt                   # Application class annotated with @HiltAndroidApp
 │   │       │   ├── navigation/
 │   │       │   │   ├── NavRoutes.kt                   # Sealed class defining all 4 navigation routes
 │   │       │   │   └── Navigation.kt                  # NavHost composable wiring all screens
+│   │       │   ├── data/
+│   │       │   │   ├── local/
+│   │       │   │   │   ├── AppDatabase.kt             # Room database definition (v1)
+│   │       │   │   │   ├── SubjectDao.kt              # DAO: upsert, delete, query subjects
+│   │       │   │   │   ├── TaskDao.kt                 # DAO: upsert, delete, query tasks
+│   │       │   │   │   ├── SessionDao.kt              # DAO: insert, delete, query sessions
+│   │       │   │   │   └── ColorListConverter.kt      # Room TypeConverter for List<Int> ↔ String
+│   │       │   │   └── repository/
+│   │       │   │       ├── SubjectRepositoryImpl.kt   # Concrete Subject repository backed by SubjectDao
+│   │       │   │       ├── TaskRepositoryImpl.kt      # Concrete Task repository backed by TaskDao
+│   │       │   │       └── SessionRepositoryImpl.kt   # Concrete Session repository backed by SessionDao
+│   │       │   ├── di/
+│   │       │   │   ├── DatabaseModule.kt              # Hilt module providing AppDatabase & DAOs
+│   │       │   │   └── RepositoryModule.kt            # Hilt module binding repository interfaces to impls
 │   │       │   ├── domain/
 │   │       │   │   ├── DummyData.kt                   # Sample data for previews & testing
-│   │       │   │   └── model/
-│   │       │   │       ├── Subject.kt                 # Subject domain model
-│   │       │   │       ├── Task.kt                    # Task domain model
-│   │       │   │       └── Session.kt                 # Study session domain model
+│   │       │   │   ├── model/
+│   │       │   │   │   ├── Subject.kt                 # Subject Room entity + color helpers
+│   │       │   │   │   ├── Task.kt                    # Task Room entity
+│   │       │   │   │   └── Session.kt                 # Session Room entity
+│   │       │   │   └── repository/
+│   │       │   │       ├── SubjectRepository.kt       # Repository interface for subjects
+│   │       │   │       ├── TaskRepository.kt          # Repository interface for tasks
+│   │       │   │       └── SessionRepository.kt       # Repository interface for sessions
 │   │       │   ├── screens/
 │   │       │   │   ├── components/                    # Shared reusable UI components
 │   │       │   │   │   ├── AddSubjectDialog.kt        # Dialog to add or update a subject
@@ -110,35 +165,39 @@ JCStudyNotes/
 │   │       │   │   │   └── SubjectListBottomSheet.kt  # Modal bottom sheet for picking a subject
 │   │       │   │   ├── landing/
 │   │       │   │   │   ├── LandingScreen.kt           # Main dashboard screen
+│   │       │   │   │   ├── LandingViewModel.kt        # ViewModel injecting SubjectRepository
 │   │       │   │   │   └── composables/
-│   │       │   │   │       ├── LandingTopBar.kt       # Top app bar
-│   │       │   │   │       ├── LandingCounter.kt      # Stats row (subjects/hours)
-│   │       │   │   │       ├── LandingSubjectCards.kt # Horizontal subject card list
-│   │       │   │   │       ├── SubjectCard.kt         # Single gradient subject card
-│   │       │   │   │       └── LandingTaskList.kt     # Landing-specific task list composable
+│   │       │   │   │       ├── LandingTopBar.kt
+│   │       │   │   │       ├── LandingCounter.kt
+│   │       │   │   │       ├── LandingSubjectCards.kt
+│   │       │   │   │       ├── SubjectCard.kt
+│   │       │   │   │       └── LandingTaskList.kt
 │   │       │   │   ├── subject/
 │   │       │   │   │   ├── SubjectScreen.kt           # Per-subject detail screen
+│   │       │   │   │   ├── SubjectViewModel.kt        # ViewModel injecting SubjectRepository
 │   │       │   │   │   └── composables/
-│   │       │   │   │       ├── SubjectTopBar.kt       # Collapsing large top bar with actions
-│   │       │   │   │       └── SubjectOverview.kt     # Goal/studied hours + circular progress
+│   │       │   │   │       ├── SubjectTopBar.kt
+│   │       │   │   │       └── SubjectOverview.kt
 │   │       │   │   ├── task/
 │   │       │   │   │   ├── TaskScreen.kt              # Create / edit task screen
+│   │       │   │   │   ├── TaskViewModel.kt           # ViewModel injecting TaskRepository
 │   │       │   │   │   └── composables/
-│   │       │   │   │       ├── TaskTopBar.kt          # Top bar with checkbox & delete actions
-│   │       │   │   │       ├── PriorityButton.kt      # Colored priority selector button
-│   │       │   │   │       └── TaskDatePicker.kt      # Material 3 date picker dialog wrapper
+│   │       │   │   │       ├── TaskTopBar.kt
+│   │       │   │   │       ├── PriorityButton.kt
+│   │       │   │   │       └── TaskDatePicker.kt
 │   │       │   │   ├── session/
 │   │       │   │   │   ├── SessionScreen.kt           # Active study session screen
+│   │       │   │   │   ├── SessionViewModel.kt        # ViewModel injecting SessionRepository
 │   │       │   │   │   └── composables/
-│   │       │   │   │       ├── SessionTopBar.kt       # Top bar with back navigation
-│   │       │   │   │       ├── SessionTimer.kt        # Circular countdown timer display
-│   │       │   │   │       ├── SessionRelatedToSubject.kt # Subject selector row
-│   │       │   │   │       └── SessionButtons.kt      # Start / Cancel / Finish button row
+│   │       │   │   │       ├── SessionTopBar.kt
+│   │       │   │   │       ├── SessionTimer.kt
+│   │       │   │   │       ├── SessionRelatedToSubject.kt
+│   │       │   │   │       └── SessionButtons.kt
 │   │       │   │   └── theme/
-│   │       │   │       ├── Color.kt                   # Full Material 3 color tokens
-│   │       │   │       ├── Theme.kt                   # App theme definition
-│   │       │   │       ├── ThemeData.kt               # Light & dark color schemes
-│   │       │   │       └── Type.kt                    # Typography & Google Fonts
+│   │       │   │       ├── Color.kt
+│   │       │   │       ├── Theme.kt
+│   │       │   │       ├── ThemeData.kt
+│   │       │   │       └── Type.kt
 │   │       │   └── util/
 │   │       │       └── Common.kt                      # Priority enum, changeMillisToDateString & shared utilities
 │   │       ├── res/                                   # Android resources (drawables, etc.)
@@ -213,17 +272,20 @@ A top-level composable called directly from `MainActivity`. It:
 
 ## 🗂️ Domain Models
 
+All domain models are also **Room `@Entity`** classes — they serve as both domain objects and database table definitions.
+
 ### `Subject`
 Represents a study subject the user wants to track.
 
 | Field | Type | Description |
 |---|---|---|
-| `id` | `Int` | Unique identifier |
+| `id` | `Int?` | Auto-generated primary key |
 | `name` | `String` | Subject name (e.g. "Physics") |
 | `goalHours` | `Float` | Target study hours for this subject |
-| `colors` | `List<Color>` | Gradient colors for the subject card |
+| `colors` | `List<Int>` | Gradient color list stored as ARGB integers |
 
-> Comes with 5 built-in gradient presets via `Subject.subjectCardColors`.
+> Comes with 5 built-in gradient presets via `Subject.subjectCardColors`.  
+> Helper methods `toColorIntList()` and `toColorList()` convert between `List<Color>` and `List<Int>` for UI ↔ DB interop.
 
 ---
 
@@ -232,14 +294,14 @@ Represents a to-do item linked to a subject.
 
 | Field | Type | Description |
 |---|---|---|
-| `id` | `Int` | Unique identifier |
+| `id` | `Int?` | Auto-generated primary key |
 | `title` | `String` | Short task title |
 | `description` | `String` | Optional detailed description |
 | `dueDate` | `Long` | Due date as Unix timestamp |
 | `priority` | `Int` | Priority level (0 = Low, 1 = Medium, 2 = High) |
 | `relatedToSubject` | `String` | Name of the associated subject |
 | `isCompleted` | `Boolean` | Completion status |
-| `taskSubjectId` | `Int` | ID of the associated subject |
+| `taskSubjectId` | `Int` | Foreign key referencing the associated subject |
 
 ---
 
@@ -248,11 +310,169 @@ Represents a single study session log.
 
 | Field | Type | Description |
 |---|---|---|
-| `id` | `Int` | Unique identifier |
-| `sessionSubjectId` | `Int` | ID of the subject studied |
+| `id` | `Int?` | Auto-generated primary key |
+| `sessionSubjectId` | `Int` | Foreign key referencing the subject studied |
 | `relatedToSubject` | `String` | Name of the subject studied |
 | `date` | `Long` | Session date as Unix timestamp |
-| `duration` | `Long` | Duration of the session (in hours) |
+| `duration` | `Long` | Duration of the session in seconds |
+
+---
+
+## 🗃️ Domain Repositories
+
+Repository interfaces are defined in the `domain/repository/` package and act as the contract between the domain and data layers.
+
+### `SubjectRepository`
+
+| Method | Return Type | Description |
+|---|---|---|
+| `upsertSubject(subject)` | `suspend Unit` | Insert or update a subject |
+| `getTotalSubjectsCount()` | `Flow<Int>` | Observe total number of subjects |
+| `getTotalGoalHours()` | `Flow<Float>` | Observe sum of all subjects' goal hours |
+| `getSubjectById(subjectId)` | `suspend Subject?` | Fetch a single subject by ID |
+| `deleteSubject(subjectId)` | `suspend Unit` | Delete a subject by ID |
+| `getAllSubjects()` | `Flow<List<Subject>>` | Observe all subjects |
+
+---
+
+### `TaskRepository`
+
+| Method | Return Type | Description |
+|---|---|---|
+| `upsertTask(task)` | `suspend Unit` | Insert or update a task |
+| `deleteTask(taskId)` | `suspend Unit` | Delete a task by ID |
+| `deleteTasksBySubjectId(subjectId)` | `suspend Unit` | Delete all tasks for a subject |
+| `getTaskById(taskId)` | `suspend Task?` | Fetch a single task by ID |
+| `getTasksForSubject(subjectId)` | `Flow<List<Task>>` | Observe tasks for a specific subject |
+| `getAllTasks()` | `Flow<List<Task>>` | Observe all tasks |
+
+---
+
+### `SessionRepository`
+
+| Method | Return Type | Description |
+|---|---|---|
+| `insertSession(session)` | `suspend Unit` | Insert a new session |
+| `deleteSession(session)` | `suspend Unit` | Delete a specific session |
+| `getAllSessions()` | `Flow<List<Session>>` | Observe all sessions |
+| `getRecentSessionsForSubject(subjectId)` | `Flow<List<Session>>` | Observe sessions for a subject |
+| `getTotalSessionsDuration()` | `Flow<Long>` | Observe total studied duration across all sessions |
+| `getTotalSessionsDurationForSubject(subjectId)` | `Flow<Long>` | Observe total studied duration for a subject |
+| `deleteSessionsBySubjectId(subjectId)` | `Flow<Unit>` | Delete all sessions for a subject |
+
+---
+
+## 💾 Data Layer
+
+### `AppDatabase`
+
+A Room `RoomDatabase` subclass annotated with `@Database`. It registers all three entities and uses `ColorListConverter` as a `@TypeConverters`.
+
+| Property | Value |
+|---|---|
+| Entities | `Subject`, `Task`, `Session` |
+| Version | 1 |
+| Export Schema | `false` |
+| Database file name | `study_notes.db` |
+
+### DAOs
+
+#### `SubjectDao`
+
+| Method | Annotation | Description |
+|---|---|---|
+| `upsertSubject(subject)` | `@Upsert` | Insert or update a subject |
+| `getTotalSubjectsCount()` | `@Query` | Returns `Flow<Int>` — live count of all subjects |
+| `getTotalGoalHours()` | `@Query` | Returns `Flow<Float>` — live sum of all goal hours |
+| `getSubjectById(subjectId)` | `@Query` | Returns `Subject?` by ID |
+| `deleteSubject(subjectId)` | `@Query` | Deletes subject by ID |
+| `getAllSubjects()` | `@Query` | Returns `Flow<List<Subject>>` |
+
+#### `TaskDao`
+
+| Method | Annotation | Description |
+|---|---|---|
+| `upsertTask(task)` | `@Upsert` | Insert or update a task |
+| `deleteTask(taskId)` | `@Query` | Delete a task by ID |
+| `deleteTasksBySubjectId(subjectId)` | `@Query` | Delete all tasks for a subject |
+| `getTaskById(taskId)` | `@Query` | Returns `Task?` by ID |
+| `getTasksForSubject(subjectId)` | `@Query` | Returns `Flow<List<Task>>` for a subject |
+| `getAllTasks()` | `@Query` | Returns `Flow<List<Task>>` |
+
+#### `SessionDao`
+
+| Method | Annotation | Description |
+|---|---|---|
+| `insertSession(session)` | `@Insert` | Insert a new session |
+| `deleteSession(session)` | `@Delete` | Delete a specific session by object |
+| `getAllSessions()` | `@Query` | Returns `Flow<List<Session>>` |
+| `getRecentSessionsForSubject(subjectId)` | `@Query` | Returns `Flow<List<Session>>` for a subject |
+| `getTotalSessionsDuration()` | `@Query` | Returns `Flow<Long>` — total duration sum |
+| `getTotalSessionsDurationForSubject(subjectId)` | `@Query` | Returns `Flow<Long>` — duration sum for a subject |
+| `deleteSessionsBySubjectId(subjectId)` | `@Query` | Deletes all sessions for a subject |
+
+### Repository Implementations
+
+Each implementation class lives in `data/repository/` and implements its corresponding domain repository interface. They are injected via constructor injection with the appropriate DAO.
+
+| Class | Implements | Injected DAO |
+|---|---|---|
+| `SubjectRepositoryImpl` | `SubjectRepository` | `SubjectDao` |
+| `TaskRepositoryImpl` | `TaskRepository` | `TaskDao` |
+| `SessionRepositoryImpl` | `SessionRepository` | `SessionDao` |
+
+### `ColorListConverter`
+
+A Room `@TypeConverter` class that serializes and deserializes `List<Int>` (ARGB color integers) to and from a comma-separated `String` for storage in SQLite.
+
+| Method | Direction |
+|---|---|
+| `fromColorList(colorList: List<Int>): String` | Encode for DB storage |
+| `toColorList(colorListString: String): List<Int>` | Decode from DB |
+
+---
+
+## 💉 Dependency Injection
+
+Dependency injection is provided by **Dagger Hilt**, installed into the `SingletonComponent` for app-wide singletons.
+
+### `DatabaseModule`
+
+An `@Module` object (`@InstallIn(SingletonComponent::class)`) that provides:
+
+| Provider | Type | Scope |
+|---|---|---|
+| `provideAppDatabase(application)` | `AppDatabase` | `@Singleton` |
+| `provideSubjectDao(appDatabase)` | `SubjectDao` | `@Singleton` |
+| `provideTaskDao(appDatabase)` | `TaskDao` | `@Singleton` |
+| `provideSessionDao(appDatabase)` | `SessionDao` | `@Singleton` |
+
+Room is configured with `Room.databaseBuilder(...)` using the database name `study_notes.db`.
+
+### `RepositoryModule`
+
+An abstract `@Module` class (`@InstallIn(SingletonComponent::class)`) that uses `@Binds` to wire each repository interface to its concrete implementation:
+
+| Binding | Interface | Implementation |
+|---|---|---|
+| `bindSubjectRepository` | `SubjectRepository` | `SubjectRepositoryImpl` |
+| `bindTaskRepository` | `TaskRepository` | `TaskRepositoryImpl` |
+| `bindSessionRepository` | `SessionRepository` | `SessionRepositoryImpl` |
+
+---
+
+## 🧠 ViewModels
+
+Each screen has a dedicated `@HiltViewModel` that receives its repository dependency via `@Inject` constructor injection.
+
+| ViewModel | Screen | Injected Repository |
+|---|---|---|
+| `LandingViewModel` | `LandingScreen` | `SubjectRepository` |
+| `SubjectViewModel` | `SubjectScreen` | `SubjectRepository` |
+| `TaskViewModel` | `TaskScreen` | `TaskRepository` |
+| `SessionViewModel` | `SessionScreen` | `SessionRepository` |
+
+ViewModels are obtained in their respective screens using `hiltViewModel()` from `androidx.hilt.navigation.compose`.
 
 ---
 
@@ -536,7 +756,7 @@ Provides pre-populated lists of `Subject`, `Task`, and `Session` objects for use
 
 ### Prerequisites
 
-- **Android Studio** Hedgehog or newer (recommended: latest stable)
+- **Android Studio** Narwhal | 2025.1.1 or newer (recommended: latest stable)
 - **JDK 17** or newer
 - **Android SDK** with API level 26+
 - **Kotlin** 2.x support enabled in Android Studio
@@ -545,7 +765,7 @@ Provides pre-populated lists of `Subject`, `Task`, and `Session` objects for use
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/JCStudyNotes.git
+   git clone https://github.com/abanoub92/JCStudyNotes.git
    cd JCStudyNotes
    ```
 
