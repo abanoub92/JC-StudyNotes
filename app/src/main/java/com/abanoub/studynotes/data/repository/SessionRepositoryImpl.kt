@@ -4,6 +4,7 @@ import com.abanoub.studynotes.data.local.SessionDao
 import com.abanoub.studynotes.domain.model.Session
 import com.abanoub.studynotes.domain.repository.SessionRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.take
 import javax.inject.Inject
 
 class SessionRepositoryImpl
@@ -12,31 +13,35 @@ class SessionRepositoryImpl
 ): SessionRepository {
 
     override suspend fun insertSession(session: Session) {
-        TODO("Not yet implemented")
+        sessionDao.insertSession(session)
     }
 
     override suspend fun deleteSession(session: Session) {
-        TODO("Not yet implemented")
+        sessionDao.deleteSession(session)
     }
 
     override fun getAllSessions(): Flow<List<Session>> {
-        TODO("Not yet implemented")
+        return sessionDao.getAllSessions()
     }
 
-    override fun getRecentSessionsForSubject(subjectId: Int): Flow<List<Session>> {
-        TODO("Not yet implemented")
+    override fun getRecentTenSessionsForSubject(subjectId: Int): Flow<List<Session>> {
+        return sessionDao.getRecentSessionsForSubject(subjectId).take(10)
+    }
+
+    override fun getRecentFiveSessions(): Flow<List<Session>> {
+        return sessionDao.getAllSessions().take(5)
     }
 
     override fun getTotalSessionsDuration(): Flow<Long> {
-        TODO("Not yet implemented")
+        return sessionDao.getTotalSessionsDuration()
     }
 
     override fun getTotalSessionsDurationForSubject(subjectId: Int): Flow<Long> {
-        TODO("Not yet implemented")
+        return sessionDao.getTotalSessionsDurationForSubject(subjectId)
     }
 
     override fun deleteSessionsBySubjectId(subjectId: Int) {
-        TODO("Not yet implemented")
+        sessionDao.deleteSessionsBySubjectId(subjectId)
     }
 
 }

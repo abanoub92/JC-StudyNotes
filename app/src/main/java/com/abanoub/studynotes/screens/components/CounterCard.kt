@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.sp
 fun CounterCard(
     modifier: Modifier,
     title: String,
-    value: Int
+    value: String
 ){
     ElevatedCard(
         modifier = modifier
@@ -38,7 +38,7 @@ fun CounterCard(
             Spacer(modifier = Modifier.height(5.dp))
 
             Text(
-                text = value.toString(),
+                text = value,
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = 30.sp
                 )

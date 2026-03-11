@@ -20,8 +20,8 @@ import com.abanoub.studynotes.screens.components.CounterCard
 
 fun LazyListScope.subjectOverview(
     modifier: Modifier,
-    studiedHours: Int,
-    goalHours: Int,
+    studiedHours: String,
+    goalHours: String,
     progress: Float
 ){
 

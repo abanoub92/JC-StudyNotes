@@ -12,8 +12,8 @@ import com.abanoub.studynotes.screens.components.CounterCard
 fun LandingCounter(
     modifier: Modifier,
     subjectCount: Int,
-    studiedHours: Int,
-    goalStudyHours: Int
+    studiedHours: String,
+    goalStudyHours: String
 ){
     Row(
         modifier = modifier
@@ -21,7 +21,7 @@ fun LandingCounter(
         CounterCard(
             modifier = Modifier.weight(1f),
             title = "Subject Count",
-            value = subjectCount
+            value = subjectCount.toString()
         )
 
         Spacer(modifier = Modifier.width(10.dp))

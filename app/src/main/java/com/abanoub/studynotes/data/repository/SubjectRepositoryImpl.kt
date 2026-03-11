@@ -1,6 +1,8 @@
 package com.abanoub.studynotes.data.repository
 
+import com.abanoub.studynotes.data.local.SessionDao
 import com.abanoub.studynotes.data.local.SubjectDao
+import com.abanoub.studynotes.data.local.TaskDao
 import com.abanoub.studynotes.domain.model.Subject
 import com.abanoub.studynotes.domain.repository.SubjectRepository
 import kotlinx.coroutines.flow.Flow
@@ -8,7 +10,9 @@ import javax.inject.Inject
 
 class SubjectRepositoryImpl
 @Inject constructor(
-    private val subjectDao: SubjectDao
+    private val subjectDao: SubjectDao,
+    private val taskDao: TaskDao,
+    private val sessionDao: SessionDao,
 ): SubjectRepository {
 
     override suspend fun upsertSubject(subject: Subject) {
@@ -16,23 +20,25 @@ class SubjectRepositoryImpl
     }
 
     override fun getTotalSubjectsCount(): Flow<Int> {
-        TODO("Not yet implemented")
+        return subjectDao.getTotalSubjectsCount()
     }
 
     override fun getTotalGoalHours(): Flow<Float> {
-        TODO("Not yet implemented")
+        return subjectDao.getTotalGoalHours()
     }
 
     override suspend fun getSubjectById(subjectId: Int): Subject? {
-        TODO("Not yet implemented")
+        return subjectDao.getSubjectById(subjectId)
     }
 
     override suspend fun deleteSubject(subjectId: Int) {
-        TODO("Not yet implemented")
+        taskDao.deleteTasksBySubjectId(subjectId)
+        sessionDao.deleteSessionsBySubjectId(subjectId)
+        subjectDao.deleteSubject(subjectId)
     }
 
     override fun getAllSubjects(): Flow<List<Subject>> {
-        TODO("Not yet implemented")
+        return subjectDao.getAllSubjects()
     }
 
 }

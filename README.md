@@ -18,6 +18,7 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 ## 📖 Table of Contents
 
 - [Overview](#overview)
+- [What's New in v1.1](#whats-new-in-v11)
 - [Features](#features)
 - [Screenshots](#screenshots)
 - [Tech Stack](#tech-stack)
@@ -42,6 +43,7 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
   - [Session Screen](#session-screen-sessionscreenkt)
   - [Shared Components](#shared-components)
 - [Dialog Components](#dialog-components)
+- [State Management Pattern](#state-management-pattern)
 - [Utility Classes](#utility-classes)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
@@ -56,12 +58,36 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 
 ## Overview
 
-**JC Study Notes** is an Android application designed to help students create, manage, and organize their study subjects, tasks, and sessions efficiently. The app is built entirely with **Jetpack Compose** for a modern, declarative UI experience, and uses **Room** for persistent local storage.
+**JC Study Notes** is an Android application designed to help students create, manage, and organize their study subjects, tasks, and sessions efficiently. The app is built entirely with **Jetpack Compose** for a modern, declarative UI experience, uses **Room** for persistent local storage, and implements an **MVI-inspired state management pattern** for predictable and reactive UI updates.
 
 - **Package:** `com.abanoub.studynotes`
 - **Min SDK:** 26 (Android 8.0 Oreo)
 - **Target SDK:** 36
-- **Version:** 1.0
+- **Version:** 1.1
+
+---
+
+## 🆕 What's New in v1.1
+
+### State Management Enhancements
+- ✨ **MVI-Inspired Architecture**: Introduced dedicated `State` and `Event` classes for `LandingScreen` and `SubjectScreen`
+- 🔄 **Unidirectional Data Flow**: Events flow up from UI → ViewModel, State flows down ViewModel → UI
+- 🌊 **Combined Flows**: ViewModels now use `Flow.combine()` to merge multiple repository streams into a single reactive state
+- 🎯 **Better Separation of Concerns**: UI state management is now more predictable and testable
+
+### Repository Improvements
+- 🔍 **Enhanced Filtering**: New methods `getUpcomingTasksForSubject()` and `getCompletedTasksForSubject()` with built-in filtering
+- 📊 **Smart Sorting**: Tasks are automatically sorted by due date and priority in repository layer
+- 🎯 **Flow Limiting**: Session queries now use `Flow.take()` to limit results (10 for subject sessions, 5 for recent sessions)
+
+### ViewModel Enhancements
+- 💉 **Multi-Repository Injection**: ViewModels now inject multiple repositories for comprehensive data access
+- 🔄 **Reactive State Updates**: State automatically updates when any underlying data changes
+- 📨 **Event-Driven Actions**: User interactions are handled through sealed Event classes
+
+### Utility Additions
+- ⏱️ **`toHours()` Extension**: Convert milliseconds to hours with proper formatting
+- 📬 **`SnackBarEvent`**: Sealed class for standardized ViewModel → UI communication
 
 ---
 
@@ -83,6 +109,8 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 - 🔤 Custom Google Fonts (Ubuntu & Salsa)
 - 🧭 Type-safe navigation with **AndroidX Navigation Compose** (`NavHost` + sealed `NavRoutes`)
 - 💉 Dependency injection with Dagger Hilt
+- 🔄 **MVI-inspired state management** with dedicated State and Event classes for unidirectional data flow
+- 🌊 **Reactive UI updates** using Kotlin Flows with combined data streams
 - ⚡ Edge-to-edge UI experience
 
 ---
@@ -214,12 +242,13 @@ JCStudyNotes/
 
 ## 🏛️ Architecture
 
-This project follows the **MVVM (Model-View-ViewModel)** pattern combined with **Clean Architecture** principles:
+This project follows the **MVVM (Model-View-ViewModel)** pattern combined with **Clean Architecture** principles and **MVI-inspired State Management**:
 
 ```
 ┌─────────────────────────────────────────┐
 │             UI Layer (Compose)          │
 │   Screens / Composables / ViewModels    │
+│     State Classes / Event Classes       │
 └────────────────┬────────────────────────┘
                  │
 ┌────────────────▼────────────────────────┐
@@ -233,9 +262,18 @@ This project follows the **MVVM (Model-View-ViewModel)** pattern combined with *
 └─────────────────────────────────────────┘
 ```
 
-- **UI Layer:** Jetpack Compose screens, state holders (ViewModels), and navigation via **AndroidX Navigation Compose**.
-- **Domain Layer:** Use cases that encapsulate business logic, keeping the UI and data layers decoupled. Contains the core data models (`Subject`, `Task`, `Session`).
-- **Data Layer:** Room database with DAOs and Repository pattern for data access.
+- **UI Layer:** Jetpack Compose screens with ViewModels managing UI state through dedicated **State** data classes and handling user interactions via sealed **Event** classes for unidirectional data flow.
+- **Domain Layer:** Repository interfaces and domain models (`Subject`, `Task`, `Session`) that define the business logic contracts.
+- **Data Layer:** Room database with DAOs and Repository implementations for data persistence and retrieval.
+
+### State Management Pattern
+
+The app uses an **MVI-inspired** (Model-View-Intent) state management approach:
+
+- **State Classes** (`LandingState`, `SubjectState`): Immutable data classes representing the complete UI state
+- **Event Classes** (`LandingEvent`, `SubjectEvent`): Sealed classes defining all possible user actions
+- **ViewModels**: Transform events into state updates using Kotlin Flows and `combine` operators
+- **Unidirectional Data Flow**: Events flow up from UI → ViewModel, State flows down ViewModel → UI
 
 ---
 
@@ -343,8 +381,9 @@ Repository interfaces are defined in the `domain/repository/` package and act as
 | `deleteTask(taskId)` | `suspend Unit` | Delete a task by ID |
 | `deleteTasksBySubjectId(subjectId)` | `suspend Unit` | Delete all tasks for a subject |
 | `getTaskById(taskId)` | `suspend Task?` | Fetch a single task by ID |
-| `getTasksForSubject(subjectId)` | `Flow<List<Task>>` | Observe tasks for a specific subject |
-| `getAllTasks()` | `Flow<List<Task>>` | Observe all tasks |
+| `getUpcomingTasksForSubject(subjectId)` | `Flow<List<Task>>` | Observe uncompleted tasks for a specific subject |
+| `getCompletedTasksForSubject(subjectId)` | `Flow<List<Task>>` | Observe completed tasks for a specific subject |
+| `getAllUpcomingTasks()` | `Flow<List<Task>>` | Observe all uncompleted tasks sorted by due date and priority |
 
 ---
 
@@ -355,10 +394,11 @@ Repository interfaces are defined in the `domain/repository/` package and act as
 | `insertSession(session)` | `suspend Unit` | Insert a new session |
 | `deleteSession(session)` | `suspend Unit` | Delete a specific session |
 | `getAllSessions()` | `Flow<List<Session>>` | Observe all sessions |
-| `getRecentSessionsForSubject(subjectId)` | `Flow<List<Session>>` | Observe sessions for a subject |
+| `getRecentTenSessionsForSubject(subjectId)` | `Flow<List<Session>>` | Observe the 10 most recent sessions for a subject |
+| `getRecentFiveSessions()` | `Flow<List<Session>>` | Observe the 5 most recent sessions across all subjects |
 | `getTotalSessionsDuration()` | `Flow<Long>` | Observe total studied duration across all sessions |
 | `getTotalSessionsDurationForSubject(subjectId)` | `Flow<Long>` | Observe total studied duration for a subject |
-| `deleteSessionsBySubjectId(subjectId)` | `Flow<Unit>` | Delete all sessions for a subject |
+| `deleteSessionsBySubjectId(subjectId)` | `Unit` | Delete all sessions for a subject |
 
 ---
 
@@ -421,6 +461,22 @@ Each implementation class lives in `data/repository/` and implements its corresp
 | `TaskRepositoryImpl` | `TaskRepository` | `TaskDao` |
 | `SessionRepositoryImpl` | `SessionRepository` | `SessionDao` |
 
+#### Advanced Logic
+
+**TaskRepositoryImpl** includes sorting and filtering logic:
+
+- **`getUpcomingTasksForSubject()`**: Filters tasks by `isCompleted = false` for a specific subject
+- **`getCompletedTasksForSubject()`**: Filters tasks by `isCompleted = true` and applies sorting
+- **`getAllUpcomingTasks()`**: Filters all incomplete tasks and applies sorting
+- **Task Sorting**: Uses `compareBy<Task> { it.dueDate }.thenBy { it.priority }` to sort by due date first, then by priority
+
+**SessionRepositoryImpl** includes flow limiting:
+
+- **`getRecentTenSessionsForSubject()`**: Uses `Flow.take(10)` to limit to 10 most recent sessions
+- **`getRecentFiveSessions()`**: Uses `Flow.take(5)` to limit to 5 most recent sessions across all subjects
+
+These implementations demonstrate the **Repository Pattern** benefit: business logic (filtering, sorting, limiting) is encapsulated in the data layer, keeping ViewModels clean.
+
 ### `ColorListConverter`
 
 A Room `@TypeConverter` class that serializes and deserializes `List<Int>` (ARGB color integers) to and from a comma-separated `String` for storage in SQLite.
@@ -463,16 +519,24 @@ An abstract `@Module` class (`@InstallIn(SingletonComponent::class)`) that uses 
 
 ## 🧠 ViewModels
 
-Each screen has a dedicated `@HiltViewModel` that receives its repository dependency via `@Inject` constructor injection.
+Each screen has a dedicated `@HiltViewModel` that receives its repository dependencies via `@Inject` constructor injection.
 
-| ViewModel | Screen | Injected Repository |
+| ViewModel | Screen | Injected Repositories |
 |---|---|---|
-| `LandingViewModel` | `LandingScreen` | `SubjectRepository` |
-| `SubjectViewModel` | `SubjectScreen` | `SubjectRepository` |
-| `TaskViewModel` | `TaskScreen` | `TaskRepository` |
-| `SessionViewModel` | `SessionScreen` | `SessionRepository` |
+| `LandingViewModel` | `LandingScreen` | `SubjectRepository`, `SessionRepository`, `TaskRepository` |
+| `SubjectViewModel` | `SubjectScreen` | `SubjectRepository`, `TaskRepository`, `SessionRepository` |
+| `TaskViewModel` | `TaskScreen` | `TaskRepository`, `SubjectRepository` |
+| `SessionViewModel` | `SessionScreen` | `SessionRepository`, `SubjectRepository` |
 
 ViewModels are obtained in their respective screens using `hiltViewModel()` from `androidx.hilt.navigation.compose`.
+
+### State Management
+
+ViewModels use **combined Kotlin Flows** to create reactive state:
+- Multiple repository flows are combined using `combine()` operator
+- State updates automatically when any underlying data changes
+- `StateFlow` exposes immutable state to the UI
+- Event handling is done through dedicated event methods that update state
 
 ---
 
@@ -719,6 +783,106 @@ A generic Material 3 `AlertDialog` for confirming a destructive action (e.g., de
 
 ---
 
+## 🔄 State Management Pattern
+
+The app follows an **MVI-inspired (Model-View-Intent)** state management pattern for complex screens, providing unidirectional data flow and predictable state updates.
+
+### State Classes
+
+Each screen with complex state has a dedicated data class representing the complete UI state:
+
+#### `LandingState`
+```kotlin
+data class LandingState(
+    val totalSubjectCount: Int = 0,
+    val totalStudyHours: Float = 0f,
+    val totalGoalStudyHours: Float = 0f,
+    val subjects: List<Subject> = emptyList(),
+    val subjectName: String = "",
+    val goalStudyHours: String = "",
+    val subjectCardColors: List<Color> = Subject.subjectCardColors.random(),
+    val session: Session? = null
+)
+```
+
+#### `SubjectState`
+```kotlin
+data class SubjectState(
+    val currentSubjectId: Int? = null,
+    val subjectName: String = "",
+    val goalStudyHours: String = "",
+    val studyHours: Float = 0f,
+    val subjectCardColors: List<Color> = Subject.subjectCardColors.random(),
+    val recentSession: List<Session> = emptyList(),
+    val upcomingTasks: List<Task> = emptyList(),
+    val completedTasks: List<Task> = emptyList(),
+    val session: Session? = null,
+    val progress: Float = 0f
+)
+```
+
+### Event Classes
+
+User actions are modeled as sealed class hierarchies:
+
+#### `LandingEvent`
+```kotlin
+sealed class LandingEvent {
+    data object SaveSubject : LandingEvent()
+    data object DeleteSession : LandingEvent()
+    data class OnDeleteSessionButtonClick(val session: Session): LandingEvent()
+    data class OnTaskIsCompleteChange(val task: Task): LandingEvent()
+    data class OnSubjectCardColorChange(val colors: List<Color>): LandingEvent()
+    data class OnSubjectNameChange(val name: String): LandingEvent()
+    data class OnGoalStudyHoursChange(val hours: String): LandingEvent()
+}
+```
+
+#### `SubjectEvent`
+```kotlin
+sealed class SubjectEvent {
+    data object UpdateSubject : SubjectEvent()
+    data object DeleteSubject : SubjectEvent()
+    data object DeleteSession : SubjectEvent()
+    data object UpdateProgress : SubjectEvent()
+    data class OnTaskIsCompleteChange(val task: Task) : SubjectEvent()
+    data class OnSubjectCardColorChange(val colors: List<Color>) : SubjectEvent()
+    data class OnSubjectNameChange(val name: String) : SubjectEvent()
+    data class OnGoalStudyHoursChange(val hours: String) : SubjectEvent()
+    data class OnDeleteSessionButtonClick(val session: Session) : SubjectEvent()
+}
+```
+
+### Flow Architecture
+
+ViewModels use Kotlin `Flow.combine()` to merge multiple data sources into a single state stream:
+
+```kotlin
+val state = combine(
+    _state,
+    subjectRepository.getAllSubjects(),
+    sessionRepository.getTotalSessionsDuration()
+    // ... other flows
+) { state, subjects, totalDuration ->
+    state.copy(
+        subjects = subjects,
+        totalStudyHours = totalDuration.toHours()
+        // ... other updates
+    )
+}.stateIn(
+    scope = viewModelScope,
+    started = SharingStarted.WhileSubscribed(5000),
+    initialValue = LandingState()
+)
+```
+
+This ensures:
+- **Reactive updates**: UI automatically reflects database changes
+- **Single source of truth**: State is always consistent
+- **Lifecycle awareness**: Flows stop when UI is not visible
+
+---
+
 ## 🔧 Utility Classes
 
 ### `Priority` (enum)
@@ -734,7 +898,9 @@ Located in `util/Common.kt`. Maps an integer priority value to a human-readable 
 
 ---
 
-### `changeMillisToDateString` (extension function)
+### Extension Functions
+
+#### `changeMillisToDateString` (Long?)
 Located in `util/Common.kt`. Converts a nullable `Long` Unix timestamp (milliseconds) to a human-readable date string formatted as `dd MMM yyyy` (e.g. `06 Mar 2026`).
 
 - If the value is `null`, it defaults to the **current date**.
@@ -744,6 +910,32 @@ Located in `util/Common.kt`. Converts a nullable `Long` Unix timestamp (millisec
 // Example usage
 datePickerState.selectedDateMillis.changeMillisToDateString() // "06 Mar 2026"
 ```
+
+#### `toHours` (Long)
+Located in `util/Common.kt`. Converts a `Long` duration in **milliseconds** to **hours** as a `Float`, formatted to 2 decimal places.
+
+```kotlin
+// Example usage
+totalDurationMillis.toHours() // 2.50
+```
+
+---
+
+### `SnackBarEvent` (sealed class)
+Located in `util/Common.kt`. Used by ViewModels to communicate with UI for showing snackbars or triggering navigation.
+
+```kotlin
+sealed class SnackBarEvent {
+    data class ShowSnackBar(
+        val message: String,
+        val duration: SnackbarDuration = SnackbarDuration.Short
+    ): SnackBarEvent()
+    
+    data object NavigateUp: SnackBarEvent()
+}
+```
+
+ViewModels expose a `SharedFlow<SnackBarEvent>` that the UI collects to show feedback messages or navigate back.
 
 ---
 
