@@ -35,10 +35,10 @@ fun NavHost(){
             SubjectScreen(
                 onBackButtonClicked = { navController.popBackStack() },
                 onAddTaskButtonClicked = {
-                    navController.navigate(NavRoutes.TaskRoute.createRoute(null, -1))
+                    navController.navigate(NavRoutes.TaskRoute.createRoute(null, it))
                 },
-                onTaskCardClicked = {
-                    navController.navigate(NavRoutes.TaskRoute.createRoute(it, null))
+                onTaskCardClicked = { taskId, subjectId ->
+                    navController.navigate(NavRoutes.TaskRoute.createRoute(taskId, subjectId))
                 }
             )
         }

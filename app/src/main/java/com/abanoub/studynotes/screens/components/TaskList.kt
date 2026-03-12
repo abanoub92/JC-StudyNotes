@@ -28,6 +28,7 @@ import com.abanoub.studynotes.R
 import com.abanoub.studynotes.domain.model.Task
 import com.abanoub.studynotes.screens.components.TaskCheckbox
 import com.abanoub.studynotes.util.Priority
+import com.abanoub.studynotes.util.changeMillisToDateString
 
 fun LazyListScope.taskList(
     title: String,
@@ -117,7 +118,7 @@ private fun TaskCard(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "${task.dueDate}",
+                    text = task.dueDate.changeMillisToDateString(),
                     style = MaterialTheme.typography.bodySmall,
                 )
             }

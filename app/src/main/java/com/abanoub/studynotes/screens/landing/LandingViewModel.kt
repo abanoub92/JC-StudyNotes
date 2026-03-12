@@ -93,11 +93,29 @@ class LandingViewModel
                     it.copy(session = event.session)
                 }
             }
-            is LandingEvent.OnTaskIsCompleteChange -> {
-
-            }
+            is LandingEvent.OnTaskIsCompleteChange -> updateTask(event.task)
             LandingEvent.SaveSubject -> saveSubject()
             LandingEvent.DeleteSession -> deleteSession()
+        }
+    }
+
+    private fun updateTask(task: Task){
+        viewModelScope.launch {
+            try {
+                taskRepository.upsertTask(
+                    task.copy(isCompleted = !task.isCompleted)
+                )
+                _snackBarEventFlow.emit(
+                    SnackBarEvent.ShowSnackBar(message = "Saved in completed tasks.")
+                )
+            } catch (e: Exception){
+                _snackBarEventFlow.emit(
+                    SnackBarEvent.ShowSnackBar(
+                        message = "Couldn't update task. ${e.message}",
+                        duration = SnackbarDuration.Long
+                    )
+                )
+            }
         }
     }
 

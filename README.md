@@ -9,6 +9,8 @@
 ![Target SDK](https://img.shields.io/badge/Target%20SDK-36-blue?style=flat)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=flat)
 
+**Last Updated:** March 12, 2026
+
 </div>
 
 A modern **Android note-taking application** built with **Jetpack Compose**, following clean architecture principles and leveraging the latest Android development stack.
@@ -18,14 +20,15 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 ## 📖 Table of Contents
 
 - [Overview](#overview)
-- [What's New in v1.1](#whats-new-in-v11)
-- [Features](#features)
+- [What's New in v1.0](#-whats-new-in-v10)
+- [Features](#-features)
+- [Future Enhancements](#-future-enhancements)
 - [Screenshots](#screenshots)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Architecture](#architecture)
-- [Navigation](#navigation)
-- [Domain Models](#domain-models)
+- [Navigation](#-navigation)
+- [Domain Models](#-domain-models)
 - [Domain Repositories](#domain-repositories)
 - [Data Layer](#data-layer)
   - [AppDatabase](#appdatabase)
@@ -43,16 +46,19 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
   - [Session Screen](#session-screen-sessionscreenkt)
   - [Shared Components](#shared-components)
 - [Dialog Components](#dialog-components)
-- [State Management Pattern](#state-management-pattern)
-- [Utility Classes](#utility-classes)
-- [Getting Started](#getting-started)
+- [State Management Pattern](#-state-management-pattern)
+- [Utility Classes](#-utility-classes)
+- [Getting Started](#-getting-started)
   - [Prerequisites](#prerequisites)
   - [Setup](#setup)
-- [UI & Theming](#ui--theming)
-- [Dependencies](#dependencies)
-- [Build Configuration](#build-configuration)
-- [License](#license)
-- [Attribution](#attribution)
+- [UI & Theming](#-ui--theming)
+- [Dependencies](#-dependencies)
+- [Build Configuration](#-build-configuration)
+- [Development](#-development)
+- [FAQ](#-faq)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Attribution](#-attribution)
 
 ---
 
@@ -63,55 +69,164 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 - **Package:** `com.abanoub.studynotes`
 - **Min SDK:** 26 (Android 8.0 Oreo)
 - **Target SDK:** 36
-- **Version:** 1.1
+- **Compile SDK:** 36.1
+- **Version:** 1.0
+- **Version Code:** 1
+
+### 📊 Project Statistics
+
+| Metric | Count |
+|--------|-------|
+| 📱 **Screens** | 4 (Landing, Subject, Task, Session) |
+| 🎨 **Composable Files** | 30+ |
+| 🗄️ **Database Tables** | 3 (Subject, Task, Session) |
+| 📦 **Repositories** | 3 (Subject, Task, Session) |
+| 🧩 **ViewModels** | 4 |
+| 🎯 **Navigation Routes** | 4 |
+| 🔧 **DI Modules** | 2 (Database, Repository) |
+| 📝 **Lines of Code** | ~2,500+ |
+
+### 🚀 Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/abanoub92/JCStudyNotes.git
+
+# Open in Android Studio
+# File → Open → Select JCStudyNotes folder
+
+# Run the app
+# Connect device/emulator (API 26+) and click Run ▶
+```
+
+**Requirements:** Android Studio 2025.1.1+, JDK 17+, Android SDK API 26+
+
+### 🛠️ Key Technologies
+
+| Technology | Purpose |
+|------------|---------|
+| 🎨 **Jetpack Compose** | Modern declarative UI toolkit |
+| 🏗️ **Clean Architecture** | Separation of concerns (Domain, Data, Presentation) |
+| 💉 **Dagger Hilt** | Dependency injection |
+| 🗄️ **Room Database** | Local data persistence |
+| 🧭 **Navigation Compose** | Type-safe screen navigation |
+| 🔄 **Kotlin Flows** | Reactive data streams |
+| 🎯 **MVI Pattern** | Predictable state management |
+| 🎨 **Material 3** | Google's latest design system |
+| ⚡ **KSP** | Fast annotation processing |
+| 📅 **Java Time API** | Modern date/time handling (with desugaring) |
 
 ---
 
-## 🆕 What's New in v1.1
+## 🆕 What's New in v1.0
 
-### State Management Enhancements
-- ✨ **MVI-Inspired Architecture**: Introduced dedicated `State` and `Event` classes for `LandingScreen` and `SubjectScreen`
+### Modern Architecture
+- ✨ **MVI-Inspired Architecture**: Dedicated `State` and `Event` classes for `LandingScreen`, `SubjectScreen`, and `TaskScreen`
 - 🔄 **Unidirectional Data Flow**: Events flow up from UI → ViewModel, State flows down ViewModel → UI
-- 🌊 **Combined Flows**: ViewModels now use `Flow.combine()` to merge multiple repository streams into a single reactive state
-- 🎯 **Better Separation of Concerns**: UI state management is now more predictable and testable
+- 🌊 **Combined Flows**: ViewModels use `Flow.combine()` to merge multiple repository streams into a single reactive state
+- 🎯 **Better Separation of Concerns**: UI state management is predictable, testable, and maintainable
 
-### Repository Improvements
-- 🔍 **Enhanced Filtering**: New methods `getUpcomingTasksForSubject()` and `getCompletedTasksForSubject()` with built-in filtering
-- 📊 **Smart Sorting**: Tasks are automatically sorted by due date and priority in repository layer
-- 🎯 **Flow Limiting**: Session queries now use `Flow.take()` to limit results (10 for subject sessions, 5 for recent sessions)
+### Repository Layer
+- 🔍 **Enhanced Filtering**: Methods like `getUpcomingTasksForSubject()` and `getCompletedTasksForSubject()` with built-in filtering
+- 📊 **Smart Sorting**: Tasks automatically sorted by due date and priority at repository layer
+- 🎯 **Flow Optimization**: Session queries use `Flow.take()` to limit results (10 for subject sessions, 5 for recent sessions)
+- 📈 **Aggregated Data**: Real-time calculation of total study hours, goal hours, and subject counts
 
 ### ViewModel Enhancements
-- 💉 **Multi-Repository Injection**: ViewModels now inject multiple repositories for comprehensive data access
+- 💉 **Multi-Repository Injection**: ViewModels inject multiple repositories for comprehensive data access
 - 🔄 **Reactive State Updates**: State automatically updates when any underlying data changes
-- 📨 **Event-Driven Actions**: User interactions are handled through sealed Event classes
+- 📨 **Event-Driven Actions**: User interactions handled through sealed Event classes
+- ⏱️ **State Scoping**: `SharingStarted.WhileSubscribed(5000)` for efficient state management
 
-### Utility Additions
+### UI Components
+- 🎨 **Modular Composables**: Screen-specific composable functions organized in `composables/` directories
+- 📱 **Landing Screen Components**: `SubjectCard`, `LandingTopBar`, `LandingCounter`, `LandingTaskList`, `LandingSubjectCards`
+- 📖 **Subject Screen Components**: `SubjectTopBar`, `SubjectOverview` with progress tracking
+- 📝 **Task Screen Components**: `TaskTopBar`, `TaskDatePicker`, `PriorityButton`
+- ⏲️ **Session Screen Components**: `SessionTopBar`, `SessionTimer`, `SessionButtons`, `SessionRelatedToSubject`
+
+### Utility Enhancements
 - ⏱️ **`toHours()` Extension**: Convert milliseconds to hours with proper formatting
 - 📬 **`SnackBarEvent`**: Sealed class for standardized ViewModel → UI communication
+- 📅 **`changeMillisToDateString()`**: Format epoch milliseconds to readable date strings
+- 🎯 **`Priority` Enum**: Type-safe priority levels with associated colors
+
+### Data Layer
+- 🗄️ **Room Database**: Local persistence with type converters for complex data
+- 🔗 **Repository Pattern**: Clean separation between data sources and business logic
+- 🔄 **Flow-Based APIs**: Reactive data streams for real-time UI updates
+- 🎨 **ColorListConverter**: Custom type converter for storing color lists in database
 
 ---
 
 ## ✨ Features
 
-- 📚 Create and manage study **Subjects** with custom gradient colors
+### 📚 Subject Management
+- 📝 Create and manage study **Subjects** with custom gradient colors (5 preset gradients)
 - ➕ **Add/Update Subject dialog** with inline form validation and color picker
-- 🗑️ **Delete confirmation dialogs** to safely remove subjects or study sessions
-- ✅ Track **Tasks** with priorities (Low / Medium / High) and completion status — viewable as Upcoming or Completed lists
-- 📋 Dedicated **Subject Screen** with collapsing top bar, goal/progress overview, and per-subject task & session lists
-- 📝 **Task Screen** to create or edit tasks — with title/description fields, due date picker, priority selector, and subject linking
-- ⏱️ Log and review **Study Sessions** per subject
-- ⏲️ Dedicated **Session Screen** with a live countdown timer, subject selector bottom sheet, Start / Cancel / Finish controls, and a session history list
-- 📅 Material 3 **Date Picker** dialog in the Task Screen with future-only date validation
-- 📊 Dashboard with live counters (subject count, studied hours, goal hours)
-- 🗃️ Local data persistence with Room Database
-- 🎨 Material 3 design with dynamic color support
-- 🌗 Light & Dark theme support
-- 🔤 Custom Google Fonts (Ubuntu & Salsa)
-- 🧭 Type-safe navigation with **AndroidX Navigation Compose** (`NavHost` + sealed `NavRoutes`)
-- 💉 Dependency injection with Dagger Hilt
-- 🔄 **MVI-inspired state management** with dedicated State and Event classes for unidirectional data flow
-- 🌊 **Reactive UI updates** using Kotlin Flows with combined data streams
-- ⚡ Edge-to-edge UI experience
+- 🗑️ **Delete confirmation dialogs** to safely remove subjects
+- 🎯 Set goal study hours for each subject
+- 📊 Track progress with visual circular progress indicators
+
+### ✅ Task Tracking
+- ➕ Create tasks with **priorities** (Low / Medium / High) color-coded for easy identification
+- 📅 Set **due dates** with Material 3 date picker
+- 📋 View tasks as **Upcoming** or **Completed** lists
+- ✔️ Toggle task completion with animated checkboxes
+- 🔗 Link tasks to specific subjects
+- 📝 Add detailed descriptions to tasks
+- 🎯 Auto-sorting by due date and priority
+
+### 📖 Subject Details
+- 📱 Dedicated **Subject Screen** with collapsing top bar
+- 📊 Goal/progress overview with studied hours vs goal hours
+- 📋 Per-subject task lists (upcoming and completed)
+- ⏱️ Recent study sessions for the subject (last 10)
+- ➕ Quick "Add Task" floating action button
+- ✏️ Edit subject details and delete subjects
+
+### ⏲️ Study Session Timer
+- ⏱️ Dedicated **Session Screen** with live countdown/stopwatch timer
+- 🔗 Link sessions to specific subjects via bottom sheet selector
+- ▶️ Start / Pause / Stop controls for sessions
+- 💾 Save completed sessions to track study time
+- 📋 View session history
+- 📊 Sessions automatically update subject study hours
+
+### 🎨 UI/UX Excellence
+- 🌈 **Material 3 Design** (Material You) with dynamic colors
+- 🌓 **Dark/Light theme** support following system preferences
+- ✨ Smooth animations and transitions
+- 📱 Modern, intuitive interface built entirely with Jetpack Compose
+- 🎨 Custom gradient color schemes for subjects
+- 🔤 Google Fonts integration (Ubuntu, Salsa)
+
+### 🏗️ Technical Highlights
+- 🏛️ **Clean Architecture** with clear separation of concerns
+- 🔄 **MVI-inspired State Management** with unidirectional data flow
+- 💉 **Dependency Injection** with Dagger Hilt
+- 🗄️ **Room Database** for local data persistence
+- 📡 **Flow-based reactive programming** for real-time UI updates
+- 🧪 Type-safe navigation with sealed class routes
+- 📦 Modular code organization with screen-specific composables
+
+---
+
+## 🔮 Future Enhancements
+
+Planned features for upcoming versions:
+
+- [ ] 📊 **Statistics & Analytics** - Detailed study time analytics with charts
+- [ ] 🔔 **Task Reminders** - Push notifications for upcoming due dates
+- [ ] 📤 **Data Export/Import** - Backup and restore functionality
+- [ ] ☁️ **Cloud Sync** - Synchronize data across devices
+- [ ] 🎯 **Pomodoro Timer** - Built-in Pomodoro technique support
+- [ ] 🏆 **Achievements** - Gamification with badges and milestones
+- [ ] 📱 **Widgets** - Home screen widgets for quick access
+- [ ] 🌐 **Multi-language Support** - Localization for different languages
+- [ ] 📝 **Notes** - Rich text notes for subjects
+- [ ] 🔍 **Search** - Search functionality across all content
+- [ ] 📈 **Study Streaks** - Track consecutive study days
 
 ---
 
@@ -781,6 +896,32 @@ A generic Material 3 `AlertDialog` for confirming a destructive action (e.g., de
 | `sessionRelatedToSubject` | `LazyListScope` extension rendering a labelled row showing the currently selected subject with a dropdown `IconButton` to open the subject picker sheet |
 | `sessionButtons` | `LazyListScope` extension rendering a horizontal row of three equal-width `Button`s: **Cancel**, **Start**, and **Finish** |
 
+### Screen-Specific Composables
+
+The app organizes composables by screen in dedicated `composables/` subdirectories for better modularity:
+
+#### Landing Screen Composables (`screens/landing/composables/`)
+- **`SubjectCard.kt`** — Individual subject card with gradient background and book icon, clickable to navigate to subject details
+- **`LandingTopBar.kt`** — Top app bar with app title and navigation controls
+- **`LandingCounter.kt`** — Dashboard-style counter cards displaying metrics
+- **`LandingTaskList.kt`** — Task list component with completion checkboxes
+- **`LandingSubjectCards.kt`** — Grid layout for subject cards with "Add Subject" button
+
+#### Subject Screen Composables (`screens/subject/composables/`)
+- **`SubjectTopBar.kt`** — Top bar with back navigation and action buttons (edit, delete)
+- **`SubjectOverview.kt`** — Progress visualization with circular indicator, showing studied hours vs goal hours with percentage-based progress
+
+#### Task Screen Composables (`screens/task/composables/`)
+- **`TaskTopBar.kt`** — Top bar with back navigation, save button, and delete action
+- **`TaskDatePicker.kt`** — Material3 date picker dialog for selecting task due dates
+- **`PriorityButton.kt`** — Color-coded priority level selector (Low/Medium/High) with selected state visualization
+
+#### Session Screen Composables (`screens/session/composables/`)
+- **`SessionTopBar.kt`** — Top bar with back navigation for session screen
+- **`SessionTimer.kt`** — Large visual timer display with countdown/stopwatch functionality
+- **`SessionButtons.kt`** — Start/Stop/Pause controls with save and cancel options
+- **`SessionRelatedToSubject.kt`** — Subject selection interface showing currently linked subject
+
 ---
 
 ## 🔄 State Management Pattern
@@ -1078,6 +1219,164 @@ The project uses **Kotlin Symbol Processing (KSP)** for annotation processing, w
 
 ---
 
+## 💻 Development
+
+### Project Architecture Principles
+
+The project follows these key architectural principles:
+
+1. **Separation of Concerns**
+   - Domain layer: Business logic and models
+   - Data layer: Repositories and data sources
+   - Presentation layer: ViewModels and UI
+
+2. **Dependency Rule**
+   - Domain layer has no dependencies on other layers
+   - Data layer depends on domain
+   - Presentation layer depends on domain and data
+
+3. **Reactive Programming**
+   - Use `Flow` for reactive data streams
+   - Collect flows in UI using `collectAsState()`
+   - Combine multiple flows in ViewModels
+
+4. **State Management**
+   - Unidirectional data flow (MVI-inspired)
+   - Events flow up from UI to ViewModel
+   - State flows down from ViewModel to UI
+
+### Code Organization
+
+```
+📦 com.abanoub.studynotes/
+├── 📂 data/             # Data layer
+│   ├── local/           # Room database (DAOs, entities, converters)
+│   └── repository/      # Repository implementations
+├── 📂 di/               # Dependency injection modules
+├── 📂 domain/           # Domain layer
+│   ├── model/           # Domain models (also Room entities)
+│   └── repository/      # Repository interfaces
+├── 📂 navigation/       # Navigation routes and graph
+├── 📂 screens/          # Presentation layer
+│   ├── components/      # Shared UI components
+│   ├── landing/         # Landing screen + ViewModel
+│   ├── subject/         # Subject screen + ViewModel
+│   ├── task/            # Task screen + ViewModel
+│   ├── session/         # Session screen + ViewModel
+│   └── theme/           # Material 3 theme configuration
+└── 📂 util/             # Utility classes and extensions
+```
+
+### Best Practices
+
+- ✅ Use `@HiltViewModel` for ViewModels
+- ✅ Inject repository interfaces, not implementations
+- ✅ Use sealed classes for events and complex UI states
+- ✅ Use `LazyListScope` extensions for reusable list items
+- ✅ Keep composables small and focused
+- ✅ Extract screen-specific composables to `composables/` subdirectories
+- ✅ Use `remember` and `rememberSaveable` appropriately
+- ✅ Prefer `StateFlow` over `LiveData`
+- ✅ Use KSP instead of KAPT for faster builds
+
+### Building the Project
+
+```bash
+# Debug build
+./gradlew assembleDebug
+
+# Release build
+./gradlew assembleRelease
+
+# Run tests
+./gradlew test
+
+# Run instrumented tests
+./gradlew connectedAndroidTest
+```
+
+### Common Issues & Troubleshooting
+
+#### Gradle Sync Fails
+- Ensure you have JDK 17 or newer installed
+- Check internet connection (for dependency downloads)
+- Try `File → Invalidate Caches and Restart`
+
+#### Build Errors
+- Clean and rebuild: `./gradlew clean build`
+- Check that AGP and Kotlin versions are compatible
+- Ensure KSP plugin version matches Kotlin version
+
+#### Room Database Issues
+- If database schema changes, increment version number in `@Database` annotation
+- Provide migration strategy or use `.fallbackToDestructiveMigration()`
+- Clear app data if testing in development
+
+#### Compose Preview Not Showing
+- Ensure preview functions use `@Preview` annotation
+- Check that composable has no required parameters (use default values)
+- Try `Build → Refresh All Previews`
+
+---
+
+## 🤝 Contributing
+
+This is a personal learning project, but suggestions and feedback are welcome!
+
+### How to Contribute
+
+1. **Fork the repository**
+2. **Create a feature branch** (`git checkout -b feature/AmazingFeature`)
+3. **Commit your changes** (`git commit -m 'Add some AmazingFeature'`)
+4. **Push to the branch** (`git push origin feature/AmazingFeature`)
+5. **Open a Pull Request**
+
+### Coding Standards
+
+- Follow Kotlin coding conventions
+- Use meaningful variable and function names
+- Add comments for complex logic
+- Write composable functions that are small and focused
+- Use sealed classes for events and complex state
+- Keep ViewModels clean and focused on state management
+- Write unit tests for business logic
+
+### Reporting Issues
+
+If you find a bug or have a feature request:
+
+1. Check if the issue already exists
+2. Create a new issue with a clear title and description
+3. Include steps to reproduce (for bugs)
+4. Add relevant labels
+
+---
+
+## ❓ FAQ
+
+### Q: Does this app sync data to the cloud?
+**A:** Currently, no. All data is stored locally on your device using Room database. Cloud sync is planned for a future release.
+
+### Q: Can I export my study data?
+**A:** Data export functionality is not yet implemented but is planned for a future version.
+
+### Q: Why does the app require Android 8.0 (API 26) or higher?
+**A:** The app uses modern Android APIs and Jetpack Compose, which requires a minimum SDK of 26. This also allows us to use desugared Java Time API for better date/time handling.
+
+### Q: Does the app work offline?
+**A:** Yes! The app works completely offline. All data is stored locally on your device.
+
+### Q: How do I change the app theme?
+**A:** The app automatically follows your system theme (Light/Dark). On Android 12+, it also adapts to your wallpaper colors using Material You dynamic theming.
+
+### Q: Can I backup my data?
+**A:** Manual backup is not currently available. The data is stored in the app's private storage. Data export/import functionality is planned for a future release.
+
+### Q: Is the app available on Google Play Store?
+**A:** This is currently a personal learning project and is not published on the Play Store. You can build and install it from source.
+
+---
+
 ## 📄 License
 
 ```
@@ -1114,6 +1413,35 @@ This repository is a personal study and learning adaptation of that work.
 
 ---
 
+## 📞 Contact
+
+- **Developer:** Abanoub
+- **GitHub:** [@abanoub92](https://github.com/abanoub92)
+- **Project Link:** [JCStudyNotes](https://github.com/abanoub92/JCStudyNotes)
+
+---
+
+## 🌟 Acknowledgments
+
+- **Google** - For Jetpack Compose and Android development tools
+- **Material Design Team** - For Material 3 design system
+- **kotlang-dev** - For the original StudySmart project inspiration
+- **Android Developer Community** - For countless tutorials and resources
+- **JetBrains** - For Kotlin programming language
+
+---
+
 <div align="center">
-  Made with ❤️ using Jetpack Compose
+
+### Made with ❤️ using Jetpack Compose
+
+**[⬆ Back to Top](#-jc-study-notes)**
+
+---
+
+![Kotlin](https://img.shields.io/badge/Made%20with-Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
+![Jetpack Compose](https://img.shields.io/badge/Built%20with-Jetpack%20Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)
+
+**Last Updated:** March 12, 2026 | **Version:** 1.0
+
 </div>

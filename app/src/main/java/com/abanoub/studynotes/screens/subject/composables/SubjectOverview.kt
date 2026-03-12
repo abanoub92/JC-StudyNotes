@@ -45,7 +45,7 @@ fun LazyListScope.subjectOverview(
 
             CounterCard(
                 modifier = Modifier.weight(1f),
-                title = "Goal Study Hours",
+                title = "Studied Hours",
                 value = studiedHours
             )
 

@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.abanoub.studynotes.domain.model.Subject
+import com.abanoub.studynotes.domain.model.Task
 import com.abanoub.studynotes.domain.repository.SessionRepository
 import com.abanoub.studynotes.domain.repository.SubjectRepository
 import com.abanoub.studynotes.domain.repository.TaskRepository
@@ -85,11 +86,7 @@ class SubjectViewModel
                     it.copy(session = event.session)
                 }
             }
-            is SubjectEvent.OnTaskIsCompleteChange -> {
-                _state.update {
-                    it.copy(completedTasks = it.completedTasks + event.task)
-                }
-            }
+            is SubjectEvent.OnTaskIsCompleteChange -> { updateTask(event.task) }
             SubjectEvent.UpdateSubject -> { updateSubject() }
             SubjectEvent.DeleteSubject -> { deleteSubject() }
             SubjectEvent.DeleteSession -> { deleteSession() }
@@ -100,6 +97,32 @@ class SubjectViewModel
                         progress = (state.value.studyHours / goalStudyHours).coerceIn(0f, 1f)
                     )
                 }
+            }
+        }
+    }
+
+    private fun updateTask(task: Task){
+        viewModelScope.launch {
+            try {
+                taskRepository.upsertTask(
+                    task.copy(isCompleted = !task.isCompleted)
+                )
+                if (task.isCompleted) {
+                    _snackBarEventFlow.emit(
+                        SnackBarEvent.ShowSnackBar(message = "Saved in upcoming tasks.")
+                    )
+                } else {
+                    _snackBarEventFlow.emit(
+                        SnackBarEvent.ShowSnackBar(message = "Saved in completed tasks.")
+                    )
+                }
+            } catch (e: Exception){
+                _snackBarEventFlow.emit(
+                    SnackBarEvent.ShowSnackBar(
+                        message = "Couldn't update task. ${e.message}",
+                        duration = SnackbarDuration.Long
+                    )
+                )
             }
         }
     }

@@ -43,8 +43,8 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun SubjectScreen(
     onBackButtonClicked: () -> Unit,
-    onAddTaskButtonClicked: () -> Unit,
-    onTaskCardClicked: (Int?) -> Unit
+    onAddTaskButtonClicked: (Int?) -> Unit,
+    onTaskCardClicked: (Int?, Int?) -> Unit
 ){
 
     val viewModel = hiltViewModel<SubjectViewModel>()
@@ -137,7 +137,7 @@ fun SubjectScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 expanded = isFabExtended,
-                onClick = onAddTaskButtonClicked,
+                onClick = { onAddTaskButtonClicked(state.currentSubjectId) },
                 icon = {
                     Icon(
                         painter = painterResource(R.drawable.ic_add),
@@ -151,16 +151,18 @@ fun SubjectScreen(
         }
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(it),
             state = listState
         ) {
 
             subjectOverview(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(12.dp),
-                studiedHours = state.goalStudyHours,
-                goalHours = state.studyHours.toString(),
+                studiedHours = state.studyHours.toString(),
+                goalHours = state.goalStudyHours,
                 progress = state.progress
             )
 
@@ -169,7 +171,7 @@ fun SubjectScreen(
                 emptyListText = "You don't have any upcoming tasks.\n" +
                         "Click the + button to add new task.",
                 taskList = state.upcomingTasks,
-                onTaskClicked = onTaskCardClicked,
+                onTaskClicked = { taskId -> onTaskCardClicked(taskId, state.currentSubjectId) },
                 onCheckboxClicked = { viewModel.onEvent(SubjectEvent.OnTaskIsCompleteChange(it)) }
             )
 
@@ -180,7 +182,7 @@ fun SubjectScreen(
                 emptyListText = "You don't have any completed tasks.\n" +
                         "Click the check box on completion of task.",
                 taskList = state.completedTasks,
-                onTaskClicked = onTaskCardClicked,
+                onTaskClicked = { taskId -> onTaskCardClicked(taskId, state.currentSubjectId) },
                 onCheckboxClicked = { viewModel.onEvent(SubjectEvent.OnTaskIsCompleteChange(it)) }
             )
 
@@ -208,6 +210,6 @@ fun SubjectScreenPreview(){
     SubjectScreen(
         onBackButtonClicked = {},
         onAddTaskButtonClicked = {},
-        onTaskCardClicked = {}
+        onTaskCardClicked = {_, _ ->}
     )
 }
