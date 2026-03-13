@@ -43,3 +43,8 @@ sealed class SnackBarEvent {
 
     data object NavigateUp: SnackBarEvent()
 }
+
+/* Add padding number '0' to numbers < 10 */
+fun Int.pad(): String {
+    return this.toString().padStart(length = 2, padChar = '0')
+}

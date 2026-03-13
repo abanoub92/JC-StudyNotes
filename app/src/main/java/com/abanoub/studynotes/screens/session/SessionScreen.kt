@@ -18,6 +18,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.abanoub.studynotes.domain.sessions
@@ -29,6 +30,9 @@ import com.abanoub.studynotes.screens.components.SubjectListBottomSheet
 import com.abanoub.studynotes.screens.components.studySessionList
 import com.abanoub.studynotes.screens.session.composables.sessionButtons
 import com.abanoub.studynotes.screens.session.composables.sessionRelatedToSubject
+import com.abanoub.studynotes.util.Constants.ACTION_SERVICE_CANCEL
+import com.abanoub.studynotes.util.Constants.ACTION_SERVICE_START
+import com.abanoub.studynotes.util.Constants.ACTION_SERVICE_STOP
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,7 +41,14 @@ fun SessionScreen(
     onBackButtonClicked: () -> Unit
 ) {
 
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val timerService = LocalTimerService.current
+
+    val hours by timerService.hours
+    val minutes by timerService.minutes
+    val seconds by timerService.seconds
+    val currentTimerState by timerService.currentTimerState
 
     var isSubjectBottomSheetOpen by rememberSaveable { mutableStateOf(false) }
     val bottomSheetState = rememberModalBottomSheetState()
@@ -82,7 +93,10 @@ fun SessionScreen(
 
             sessionTimer(
                 modifier = Modifier.fillMaxWidth()
-                    .aspectRatio(1f)
+                    .aspectRatio(1f),
+                hours = hours,
+                minutes = minutes,
+                seconds = seconds
             )
 
             item {
@@ -99,9 +113,29 @@ fun SessionScreen(
             sessionButtons(
                 modifier = Modifier.fillMaxWidth()
                     .padding(12.dp),
-                startButtonClick = {},
-                cancelButtonClick = {},
-                finishButtonClick = {}
+                startButtonClick = {
+                    ServiceHelper.triggerForegroundService(
+                        context = context,
+                        action = if (currentTimerState == TimerState.STARTED)
+                            ACTION_SERVICE_STOP
+                        else
+                            ACTION_SERVICE_START
+                    )
+                },
+                cancelButtonClick = {
+                    ServiceHelper.triggerForegroundService(
+                        context = context,
+                        action = ACTION_SERVICE_CANCEL
+                    )
+                },
+                finishButtonClick = {
+                    ServiceHelper.triggerForegroundService(
+                        context = context,
+                        action = ACTION_SERVICE_STOP
+                    )
+                },
+                timerState = currentTimerState,
+                seconds = seconds
             )
 
             studySessionList(

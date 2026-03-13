@@ -1,9 +1,11 @@
 package com.abanoub.studynotes.navigation
 
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
 import com.abanoub.studynotes.screens.landing.LandingScreen
 import com.abanoub.studynotes.screens.session.SessionScreen
 import com.abanoub.studynotes.screens.subject.SubjectScreen
@@ -49,7 +51,15 @@ fun NavHost(){
             )
         }
 
-        composable(NavRoutes.SessionRoute.route) {
+        composable(
+            route = NavRoutes.SessionRoute.route,
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "study_notes://landing/session"
+                    action = Intent.ACTION_VIEW
+                }
+            )
+        ) {
             SessionScreen(
                 onBackButtonClicked = { navController.popBackStack() }
             )

@@ -9,7 +9,7 @@
 ![Target SDK](https://img.shields.io/badge/Target%20SDK-36-blue?style=flat)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=flat)
 
-**Last Updated:** March 12, 2026
+**Last Updated:** March 13, 2026
 
 </div>
 
@@ -20,6 +20,7 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 ## 📖 Table of Contents
 
 - [Overview](#overview)
+- [What's New in v1.1](#-whats-new-in-v11)
 - [What's New in v1.0](#-whats-new-in-v10)
 - [Features](#-features)
 - [Future Enhancements](#-future-enhancements)
@@ -38,6 +39,11 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 - [Dependency Injection](#dependency-injection)
   - [DatabaseModule](#databasemodule)
   - [RepositoryModule](#repositorymodule)
+  - [NotificationModule](#notificationmodule)
+- [Foreground Service](#-foreground-service-timer)
+  - [StudySessionTimerService](#studysessiontimerservice)
+  - [ServiceHelper](#servicehelper)
+  - [LocalTimerService](#localtimerservice)
 - [ViewModels](#viewmodels)
 - [Screens & UI Components](#screens--ui-components)
   - [Landing Screen](#landing-screen-landingscreenkt)
@@ -70,7 +76,7 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 - **Min SDK:** 26 (Android 8.0 Oreo)
 - **Target SDK:** 36
 - **Compile SDK:** 36.1
-- **Version:** 1.0
+- **Version:** 1.1
 - **Version Code:** 1
 
 ### 📊 Project Statistics
@@ -83,8 +89,9 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 | 📦 **Repositories** | 3 (Subject, Task, Session) |
 | 🧩 **ViewModels** | 4 |
 | 🎯 **Navigation Routes** | 4 |
-| 🔧 **DI Modules** | 2 (Database, Repository) |
-| 📝 **Lines of Code** | ~2,500+ |
+| 🔧 **DI Modules** | 3 (Database, Repository, Notification) |
+| ⚙️ **Android Services** | 1 (StudySessionTimerService — Foreground) |
+| 📝 **Lines of Code** | ~3,000+ |
 
 ### 🚀 Quick Start
 
@@ -115,6 +122,50 @@ git clone https://github.com/abanoub92/JCStudyNotes.git
 | 🎨 **Material 3** | Google's latest design system |
 | ⚡ **KSP** | Fast annotation processing |
 | 📅 **Java Time API** | Modern date/time handling (with desugaring) |
+| ⚙️ **Foreground Service** | Background-persistent study session timer |
+| 🔔 **Notifications API** | Live timer notification with deep-link tap action |
+
+---
+
+## 🆕 What's New in v1.1
+
+### Foreground Service Timer
+- 🔔 **`StudySessionTimerService`**: The study session timer has been migrated to a **bound foreground Android service**, enabling the timer to continue running even when the user navigates away from the app.
+- 📲 **Persistent Notification**: A live notification is shown while a session is active, updating every second with the current elapsed time (`HH:MM:SS`). Tapping the notification deep-links the user back to the Session screen.
+- 🔗 **Service Binding**: `MainActivity` binds to `StudySessionTimerService` via a `ServiceConnection`. The service exposes a `StudySessionTimerBuilder` inner `Binder` class to provide access to the live timer state.
+- 🧩 **`CompositionLocalProvider`**: The bound service instance is passed down the composable tree via `LocalTimerService` (`CompositionLocal`) so the `SessionScreen` can read timer state directly without a ViewModel intermediary.
+- 🎯 **`TimerState` Enum**: Service exposes `IDLE`, `STARTED`, and `STOPPED` states via `mutableStateOf` for reactive Compose observation.
+
+### New DI Module
+- 💉 **`NotificationModule`**: A new Hilt module installed in `ServiceComponent` (service-scoped lifetime) that provides:
+  - A pre-configured `NotificationCompat.Builder` with content intent for deep-link navigation
+  - A `NotificationManager` system service instance
+
+### Service Helper & Constants
+- 🛠️ **`ServiceHelper`**: A singleton object providing:
+  - `clickPendingIntent()` — builds a `TaskStackBuilder` deep-link `PendingIntent` targeting the Session screen
+  - `triggerForegroundService()` — fires an `Intent` to start/stop/cancel the foreground service
+- 📋 **`Constants.kt`**: New utility file centralising all magic strings and IDs:
+  - `ACTION_SERVICE_START`, `ACTION_SERVICE_STOP`, `ACTION_SERVICE_CANCEL`
+  - `NOTIFICATION_CHANNEL_ID`, `NOTIFICATION_CHANNEL_NAME`, `NOTIFICATION_ID`
+  - `CLICK_REQUEST_CODE`
+
+### Task Layer Completion
+- ✅ **`TaskState`** and **`TaskEvents`** are now fully implemented as dedicated files with complete MVI state management for create/edit/delete task workflows.
+- 💾 **`TaskViewModel`** is now fully functional: handles save, delete, fetch-task, and fetch-subject flows with proper error handling and snackbar feedback.
+
+### Permissions & Manifest Updates
+- 🔐 **Runtime Permission Request**: `MainActivity` requests `POST_NOTIFICATIONS` permission on Android 13+ (API 33+) at startup.
+- 📄 **New Manifest Entries**:
+  - `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_DATA_SYNC` permissions
+  - `POST_NOTIFICATIONS` permission
+  - `StudySessionTimerService` declared with `android:foregroundServiceType="dataSync"`
+
+### Deep Link Support
+- 🔗 **Session Screen Deep Link**: The Session screen route now registers `study_notes://landing/session` as a deep link URI, enabling the notification's content intent to navigate directly to the Session screen.
+
+### Utility Enhancements
+- 🔢 **`pad()` Extension** (`Int`): A new extension function in `Common.kt` that pads single-digit integers with a leading `0` (e.g., `5 → "05"`), used internally by `StudySessionTimerService` to format timer display values.
 
 ---
 
@@ -186,7 +237,8 @@ git clone https://github.com/abanoub92/JCStudyNotes.git
 - ✏️ Edit subject details and delete subjects
 
 ### ⏲️ Study Session Timer
-- ⏱️ Dedicated **Session Screen** with live countdown/stopwatch timer
+- ⏱️ **Foreground Service Timer**: Timer runs as a bound foreground Android service — continues ticking even when the user navigates away
+- 🔔 **Live Notification**: A persistent notification displays the running timer (`HH:MM:SS`) and tapping it deep-links back to the Session screen
 - 🔗 Link sessions to specific subjects via bottom sheet selector
 - ▶️ Start / Pause / Stop controls for sessions
 - 💾 Save completed sessions to track study time
@@ -209,6 +261,8 @@ git clone https://github.com/abanoub92/JCStudyNotes.git
 - 📡 **Flow-based reactive programming** for real-time UI updates
 - 🧪 Type-safe navigation with sealed class routes
 - 📦 Modular code organization with screen-specific composables
+- ⚙️ **Bound Foreground Service** for background-persistent timer with live notification
+- 🔔 **Push Notification** integration with deep-link support back to Session screen
 
 ---
 
@@ -286,7 +340,8 @@ JCStudyNotes/
 │   │       │   │       └── SessionRepositoryImpl.kt   # Concrete Session repository backed by SessionDao
 │   │       │   ├── di/
 │   │       │   │   ├── DatabaseModule.kt              # Hilt module providing AppDatabase & DAOs
-│   │       │   │   └── RepositoryModule.kt            # Hilt module binding repository interfaces to impls
+│   │       │   │   ├── RepositoryModule.kt            # Hilt module binding repository interfaces to impls
+│   │       │   │   └── NotificationModule.kt          # Hilt module (ServiceComponent) providing Notification builder & manager
 │   │       │   ├── domain/
 │   │       │   │   ├── DummyData.kt                   # Sample data for previews & testing
 │   │       │   │   ├── model/
@@ -323,7 +378,9 @@ JCStudyNotes/
 │   │       │   │   │       └── SubjectOverview.kt
 │   │       │   │   ├── task/
 │   │       │   │   │   ├── TaskScreen.kt              # Create / edit task screen
-│   │       │   │   │   ├── TaskViewModel.kt           # ViewModel injecting TaskRepository
+│   │       │   │   │   ├── TaskViewModel.kt           # ViewModel injecting TaskRepository & SubjectRepository
+│   │       │   │   │   ├── TaskState.kt               # UI state data class for TaskScreen
+│   │       │   │   │   ├── TaskEvents.kt              # Sealed event class for TaskScreen user actions
 │   │       │   │   │   └── composables/
 │   │       │   │   │       ├── TaskTopBar.kt
 │   │       │   │   │       ├── PriorityButton.kt
@@ -331,6 +388,9 @@ JCStudyNotes/
 │   │       │   │   ├── session/
 │   │       │   │   │   ├── SessionScreen.kt           # Active study session screen
 │   │       │   │   │   ├── SessionViewModel.kt        # ViewModel injecting SessionRepository
+│   │       │   │   │   ├── StudySessionTimerService.kt# Foreground service running the study timer
+│   │       │   │   │   ├── ServiceHelper.kt           # Helper: pending intents & service trigger
+│   │       │   │   │   ├── LocalTimerService.kt       # CompositionLocal for StudySessionTimerService
 │   │       │   │   │   └── composables/
 │   │       │   │   │       ├── SessionTopBar.kt
 │   │       │   │   │       ├── SessionTimer.kt
@@ -342,7 +402,8 @@ JCStudyNotes/
 │   │       │   │       ├── ThemeData.kt
 │   │       │   │       └── Type.kt
 │   │       │   └── util/
-│   │       │       └── Common.kt                      # Priority enum, changeMillisToDateString & shared utilities
+│   │       │       ├── Common.kt                      # Priority enum, changeMillisToDateString, toHours, pad & SnackBarEvent
+│   │       │       └── Constants.kt                   # Service action strings, notification IDs & request codes
 │   │       ├── res/                                   # Android resources (drawables, etc.)
 │   │       └── AndroidManifest.xml
 │   └── build.gradle.kts                               # App-level build config
@@ -420,6 +481,8 @@ A top-level composable called directly from `MainActivity`. It:
 | `SubjectScreen` | `onBackButtonClicked`, `onAddTaskButtonClicked`, `onTaskCardClicked` |
 | `TaskScreen` | `onBackButtonClicked` |
 | `SessionScreen` | `onBackButtonClicked` |
+
+> **Deep Link:** The `SessionRoute` composable registers the deep link URI `study_notes://landing/session` (action `Intent.ACTION_VIEW`). This allows the foreground service's notification to navigate directly back to the Session screen when tapped.
 
 ---
 
@@ -632,6 +695,25 @@ An abstract `@Module` class (`@InstallIn(SingletonComponent::class)`) that uses 
 
 ---
 
+### `NotificationModule`
+
+An `@Module` object (`@InstallIn(ServiceComponent::class)`) scoped to the **Android Service lifecycle** (`@ServiceScoped`). This module is exclusively used by `StudySessionTimerService`.
+
+| Provider | Type | Scope |
+|---|---|---|
+| `provideNotificationBuilder(context)` | `NotificationCompat.Builder` | `@ServiceScoped` |
+| `provideNotificationManager(context)` | `NotificationManager` | `@ServiceScoped` |
+
+The `NotificationCompat.Builder` is pre-configured with:
+- **Channel ID**: `NOTIFICATION_CHANNEL_ID`
+- **Content title**: `"Study Session Timer"`
+- **Initial content text**: `"00:00:00"`
+- **Small icon**: app launcher icon
+- **Ongoing**: `true` (cannot be dismissed by the user)
+- **Content intent**: A `PendingIntent` built by `ServiceHelper.clickPendingIntent()` that deep-links to the Session screen
+
+---
+
 ## 🧠 ViewModels
 
 Each screen has a dedicated `@HiltViewModel` that receives its repository dependencies via `@Inject` constructor injection.
@@ -640,8 +722,8 @@ Each screen has a dedicated `@HiltViewModel` that receives its repository depend
 |---|---|---|
 | `LandingViewModel` | `LandingScreen` | `SubjectRepository`, `SessionRepository`, `TaskRepository` |
 | `SubjectViewModel` | `SubjectScreen` | `SubjectRepository`, `TaskRepository`, `SessionRepository` |
-| `TaskViewModel` | `TaskScreen` | `TaskRepository`, `SubjectRepository` |
-| `SessionViewModel` | `SessionScreen` | `SessionRepository`, `SubjectRepository` |
+| `TaskViewModel` | `TaskScreen` | `TaskRepository`, `SubjectRepository`, `SavedStateHandle` |
+| `SessionViewModel` | `SessionScreen` | `SessionRepository` |
 
 ViewModels are obtained in their respective screens using `hiltViewModel()` from `androidx.hilt.navigation.compose`.
 
@@ -652,6 +734,81 @@ ViewModels use **combined Kotlin Flows** to create reactive state:
 - State updates automatically when any underlying data changes
 - `StateFlow` exposes immutable state to the UI
 - Event handling is done through dedicated event methods that update state
+
+---
+
+## ⚙️ Foreground Service Timer
+
+The study session timer runs inside a **bound foreground Android service** (`StudySessionTimerService`). This design keeps the timer alive even when the user navigates away from the Session screen.
+
+### `StudySessionTimerService`
+
+A `@AndroidEntryPoint` `Service` subclass that:
+
+- **Exposes reactive state** via Compose `mutableStateOf`:
+  - `hours`, `minutes`, `seconds` — formatted timer digits (e.g. `"05"`)
+  - `currentTimerState` — one of `TimerState.IDLE`, `TimerState.STARTED`, `TimerState.STOPPED`
+  - `duration` — raw `kotlin.time.Duration` value
+
+- **Handles intents** via `onStartCommand()`:
+
+| Action | Effect |
+|---|---|
+| `ACTION_SERVICE_START` | Starts foreground service + timer |
+| `ACTION_SERVICE_STOP` | Pauses timer (keeps duration) |
+| `ACTION_SERVICE_CANCEL` | Stops timer, resets to zero, stops service |
+
+- **Timer implementation**: Uses `kotlin.concurrent.fixedRateTimer` with a 1-second `initialDelay` and `period`. Each tick increments `duration` by 1 second, updates formatted `hours`/`minutes`/`seconds` via `updateTimeUnit()` (using `Duration.toComponents()`), and refreshes the notification text.
+
+- **Notification**: A foreground notification (channel: `NOTIFICATION_CHANNEL_ID`, importance: `LOW`) is created via `NotificationCompat.Builder` injected by Hilt. The notification text updates every second with the current `HH:MM:SS` value.
+
+- **Binder**: Exposes an inner `StudySessionTimerBuilder : Binder` class. Clients call `binder.getService()` to get the service instance and observe its `mutableStateOf` properties directly in Compose.
+
+```kotlin
+// TimerState
+enum class TimerState { IDLE, STARTED, STOPPED }
+```
+
+#### Lifecycle in `MainActivity`
+
+```kotlin
+// Bind service on start
+override fun onStart() {
+    Intent(this, StudySessionTimerService::class.java).also {
+        bindService(it, connection, BIND_AUTO_CREATE)
+    }
+}
+
+// Provide service to composable tree
+if (isBound) {
+    CompositionLocalProvider(LocalTimerService provides timerService) {
+        NavHost()
+    }
+}
+```
+
+---
+
+### `ServiceHelper`
+
+A singleton `object` with two utility functions:
+
+| Function | Description |
+|---|---|
+| `clickPendingIntent(context)` | Builds a `TaskStackBuilder` `PendingIntent` that deep-links to `"study_notes://landing/session"` via `MainActivity` |
+| `triggerForegroundService(context, action)` | Fires a `startService()` `Intent` with the given action string to control the timer service |
+
+---
+
+### `LocalTimerService`
+
+```kotlin
+val LocalTimerService = compositionLocalOf<StudySessionTimerService> {
+    error("No TimerService provided")
+}
+```
+
+A Compose `CompositionLocal` that carries the `StudySessionTimerService` instance through the composable tree. `MainActivity` provides the value via `CompositionLocalProvider`. The `SessionScreen` reads it with `LocalTimerService.current` to observe timer state directly.
 
 ---
 
@@ -704,16 +861,38 @@ The per-subject detail screen. Opened when the user taps on a subject card from 
 ### Task Screen (`TaskScreen.kt`)
 A form screen for creating a new task or editing an existing one. Navigated to from the Subject Screen FAB or by tapping a task in any task list.
 
-**State managed locally:**
-- `title` — task title input
-- `description` — task description input
-- `isDeleteTaskDialogOpen` — controls visibility of the Delete Task confirmation dialog
-- `taskTitleError` — derived validation error for the title field
+**MVI State** (`TaskState`):
+
+| Field | Type | Description |
+|---|---|---|
+| `title` | `String` | Task title input |
+| `description` | `String` | Task description input |
+| `dueDate` | `Long?` | Selected due date as epoch millis |
+| `isTaskComplete` | `Boolean` | Current completion toggle |
+| `priority` | `Priority` | Selected priority level |
+| `relatedToSubject` | `String?` | Name of linked subject |
+| `subjects` | `List<Subject>` | All subjects (for picker) |
+| `subjectId` | `Int?` | ID of linked subject |
+| `currentTaskId` | `Int?` | Non-null when editing an existing task |
+
+**Events** (`TaskEvents`):
+
+| Event | Description |
+|---|---|
+| `OnTitleChange(title)` | Updates title field |
+| `OnDescriptionChange(description)` | Updates description field |
+| `OnDateChange(millis)` | Updates selected due date |
+| `OnPriorityChange(priority)` | Changes priority |
+| `OnRelatedSubjectSelect(subject)` | Links a subject |
+| `OnIsCompleteChange` | Toggles completion |
+| `SaveTask` | Validates & saves/updates task |
+| `DeleteTask` | Deletes the current task |
 
 **Validation:**
 - Title cannot be blank
 - Title must be between 4 and 30 characters
 - The **Save** button is disabled while `taskTitleError` is non-null
+- A related subject must be selected before saving (ViewModel validates)
 
 **Sections (top to bottom):**
 1. **Top Bar** (`TaskTopBar`) — Shows "Task" title with a back button; when editing an existing task (`isTaskExist = true`) also shows a `TaskCheckbox` (to toggle completion) and a delete icon.
@@ -729,6 +908,10 @@ A form screen for creating a new task or editing an existing one. Navigated to f
 ### Session Screen (`SessionScreen.kt`)
 A dedicated screen for running and logging an active study session. Navigated to via the "Start Study Session" button on the Landing Screen.
 
+**Timer state consumed from service** (via `LocalTimerService.current`):
+- `hours`, `minutes`, `seconds` — live formatted strings from `StudySessionTimerService`
+- `currentTimerState` — `TimerState` enum observed as Compose state
+
 **State managed locally:**
 - `isSubjectBottomSheetOpen` — controls visibility of the `SubjectListBottomSheet`
 - `relatedToSubject` — the name of the subject currently linked to the session
@@ -737,12 +920,13 @@ A dedicated screen for running and logging an active study session. Navigated to
 **Behavior:**
 - Uses `rememberModalBottomSheetState` to drive the subject picker sheet
 - Hides the bottom sheet with an animation via `bottomSheetState.hide()` on subject selection
+- Timer controlled by sending intents to `StudySessionTimerService` via `ServiceHelper.triggerForegroundService()`
 
 **Sections (top to bottom):**
 1. **Top Bar** (`SessionTopBar`) — Shows "Study Session" title with a back navigation button.
-2. **Timer** (`sessionTimer`) — A large square `AspectRatio(1f)` area containing a `250dp` circular border and a centered time display (e.g. `00:05:32`).
+2. **Timer** (`sessionTimer`) — A large square `AspectRatio(1f)` area containing a `250dp` circular border and a centered time display (e.g. `00:05:32`), driven by the foreground service state.
 3. **Related to Subject** (`sessionRelatedToSubject`) — Shows the currently selected subject name with a dropdown arrow `IconButton` that opens the `SubjectListBottomSheet`.
-4. **Session Buttons** (`sessionButtons`) — A horizontal row with three equal-weight buttons: **Cancel**, **Start**, and **Finish**.
+4. **Session Buttons** (`sessionButtons`) — A horizontal row with three equal-weight buttons: **Cancel** (`ACTION_SERVICE_CANCEL`), **Start/Pause** (`ACTION_SERVICE_START` or `ACTION_SERVICE_STOP` depending on `TimerState`), and **Finish** (`ACTION_SERVICE_STOP`). Button labels adapt to the current `TimerState`.
 5. **Session History** — Shared `studySessionList` extension rendering the session history with per-row delete action that opens `DeleteDialog`.
 
 ---
@@ -1060,6 +1244,15 @@ Located in `util/Common.kt`. Converts a `Long` duration in **milliseconds** to *
 totalDurationMillis.toHours() // 2.50
 ```
 
+#### `pad` (Int)
+Located in `util/Common.kt`. Pads an `Int` to a two-character string by prepending `'0'` if the value is less than 10. Used internally by `StudySessionTimerService` to format timer display digits.
+
+```kotlin
+// Example usage
+5.pad()  // "05"
+12.pad() // "12"
+```
+
 ---
 
 ### `SnackBarEvent` (sealed class)
@@ -1077,6 +1270,21 @@ sealed class SnackBarEvent {
 ```
 
 ViewModels expose a `SharedFlow<SnackBarEvent>` that the UI collects to show feedback messages or navigate back.
+
+---
+
+### `Constants` (`util/Constants.kt`)
+A singleton `object` centralising all magic strings and IDs used by the timer service and notification system.
+
+| Constant | Value | Purpose |
+|---|---|---|
+| `ACTION_SERVICE_START` | `"ACTION_SERVICE_START"` | Intent action to start the timer |
+| `ACTION_SERVICE_STOP` | `"ACTION_SERVICE_STOP"` | Intent action to pause the timer |
+| `ACTION_SERVICE_CANCEL` | `"ACTION_SERVICE_CANCEL"` | Intent action to reset & stop the service |
+| `NOTIFICATION_CHANNEL_ID` | `"TIMER_NOTIFICATION_ID"` | ID for the timer notification channel |
+| `NOTIFICATION_CHANNEL_NAME` | `"TIMER_NOTIFICATION_NAME"` | Display name for the notification channel |
+| `NOTIFICATION_ID` | `10` | Notification ID used with `NotificationManager` |
+| `CLICK_REQUEST_CODE` | `100` | Request code for the notification `PendingIntent` |
 
 ---
 
@@ -1253,18 +1461,23 @@ The project follows these key architectural principles:
 │   ├── local/           # Room database (DAOs, entities, converters)
 │   └── repository/      # Repository implementations
 ├── 📂 di/               # Dependency injection modules
+│   ├── DatabaseModule.kt
+│   ├── RepositoryModule.kt
+│   └── NotificationModule.kt   # Service-scoped notification providers
 ├── 📂 domain/           # Domain layer
 │   ├── model/           # Domain models (also Room entities)
 │   └── repository/      # Repository interfaces
 ├── 📂 navigation/       # Navigation routes and graph
 ├── 📂 screens/          # Presentation layer
 │   ├── components/      # Shared UI components
-│   ├── landing/         # Landing screen + ViewModel
-│   ├── subject/         # Subject screen + ViewModel
-│   ├── task/            # Task screen + ViewModel
-│   ├── session/         # Session screen + ViewModel
+│   ├── landing/         # Landing screen + ViewModel + State + Event
+│   ├── subject/         # Subject screen + ViewModel + State + Event
+│   ├── task/            # Task screen + ViewModel + State + Events
+│   ├── session/         # Session screen + ViewModel + TimerService + Helpers
 │   └── theme/           # Material 3 theme configuration
 └── 📂 util/             # Utility classes and extensions
+    ├── Common.kt        # Priority, date utils, SnackBarEvent, pad()
+    └── Constants.kt     # Service action strings, notification constants
 ```
 
 ### Best Practices
@@ -1442,6 +1655,6 @@ This repository is a personal study and learning adaptation of that work.
 ![Kotlin](https://img.shields.io/badge/Made%20with-Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Built%20with-Jetpack%20Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)
 
-**Last Updated:** March 12, 2026 | **Version:** 1.0
+**Last Updated:** March 13, 2026 | **Version:** 1.1
 
 </div>
