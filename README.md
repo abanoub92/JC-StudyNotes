@@ -9,7 +9,7 @@
 ![Target SDK](https://img.shields.io/badge/Target%20SDK-36-blue?style=flat)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=flat)
 
-**Last Updated:** March 13, 2026
+**Last Updated:** March 17, 2026
 
 </div>
 
@@ -53,6 +53,8 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
   - [Shared Components](#shared-components)
 - [Dialog Components](#dialog-components)
 - [State Management Pattern](#-state-management-pattern)
+  - [State Classes](#state-classes) (`LandingState`, `SubjectState`, `TaskState`, `SessionState`)
+  - [Event Classes](#event-classes) (`LandingEvent`, `SubjectEvent`, `TaskEvents`, `SessionEvent`)
 - [Utility Classes](#-utility-classes)
 - [Getting Started](#-getting-started)
   - [Prerequisites](#prerequisites)
@@ -76,7 +78,7 @@ A modern **Android note-taking application** built with **Jetpack Compose**, fol
 - **Min SDK:** 26 (Android 8.0 Oreo)
 - **Target SDK:** 36
 - **Compile SDK:** 36.1
-- **Version:** 1.1
+- **Version:** 1.0
 - **Version Code:** 1
 
 ### 📊 Project Statistics
@@ -721,9 +723,9 @@ Each screen has a dedicated `@HiltViewModel` that receives its repository depend
 | ViewModel | Screen | Injected Repositories |
 |---|---|---|
 | `LandingViewModel` | `LandingScreen` | `SubjectRepository`, `SessionRepository`, `TaskRepository` |
-| `SubjectViewModel` | `SubjectScreen` | `SubjectRepository`, `TaskRepository`, `SessionRepository` |
+| `SubjectViewModel` | `SubjectScreen` | `SubjectRepository`, `TaskRepository`, `SessionRepository`, `SavedStateHandle` |
 | `TaskViewModel` | `TaskScreen` | `TaskRepository`, `SubjectRepository`, `SavedStateHandle` |
-| `SessionViewModel` | `SessionScreen` | `SessionRepository` |
+| `SessionViewModel` | `SessionScreen` | `SessionRepository`, `SubjectRepository` |
 
 ViewModels are obtained in their respective screens using `hiltViewModel()` from `androidx.hilt.navigation.compose`.
 
@@ -748,6 +750,7 @@ A `@AndroidEntryPoint` `Service` subclass that:
 - **Exposes reactive state** via Compose `mutableStateOf`:
   - `hours`, `minutes`, `seconds` — formatted timer digits (e.g. `"05"`)
   - `currentTimerState` — one of `TimerState.IDLE`, `TimerState.STARTED`, `TimerState.STOPPED`
+  - `subjectId` — optional `Int?` tracking the currently selected subject for the active session
   - `duration` — raw `kotlin.time.Duration` value
 
 - **Handles intents** via `onStartCommand()`:
@@ -1146,6 +1149,32 @@ data class SubjectState(
 )
 ```
 
+#### `TaskState`
+```kotlin
+data class TaskState(
+    val title: String = "",
+    val description: String = "",
+    val dueDate: Long? = null,
+    val isTaskComplete: Boolean = false,
+    val priority: Priority = Priority.LOW,
+    val relatedToSubject: String? = null,
+    val subjects: List<Subject> = emptyList(),
+    val subjectId: Int? = null,
+    val currentTaskId: Int? = null
+)
+```
+
+#### `SessionState`
+```kotlin
+data class SessionState(
+    val subjects: List<Subject> = emptyList(),
+    val sessions: List<Session> = emptyList(),
+    val relatedToSubject: String? = null,
+    val subjectId: Int? = null,
+    val session: Session? = null
+)
+```
+
 ### Event Classes
 
 User actions are modeled as sealed class hierarchies:
@@ -1175,6 +1204,35 @@ sealed class SubjectEvent {
     data class OnSubjectNameChange(val name: String) : SubjectEvent()
     data class OnGoalStudyHoursChange(val hours: String) : SubjectEvent()
     data class OnDeleteSessionButtonClick(val session: Session) : SubjectEvent()
+}
+```
+
+#### `TaskEvents`
+```kotlin
+sealed class TaskEvents {
+    data class OnTitleChange(val title: String) : TaskEvents()
+    data class OnDescriptionChange(val description: String) : TaskEvents()
+    data class OnDateChange(val millis: Long?) : TaskEvents()
+    data class OnPriorityChange(val priority: Priority) : TaskEvents()
+    data class OnRelatedSubjectSelect(val subject: Subject) : TaskEvents()
+    data object OnIsCompleteChange : TaskEvents()
+    data object SaveTask : TaskEvents()
+    data object DeleteTask : TaskEvents()
+}
+```
+
+#### `SessionEvent`
+```kotlin
+sealed class SessionEvent {
+    data class OnRelatedToSubjectChange(val subject: Subject) : SessionEvent()
+    data class SaveSession(val duration: Long) : SessionEvent()
+    data class OnDeleteSessionButtonClick(val session: Session) : SessionEvent()
+    data class UpdateSubjectIdAndRelatedToSubject(
+        val subjectId: Int?,
+        val relatedToSubject: String?
+    ) : SessionEvent()
+    data object DeleteSession : SessionEvent()
+    data object NotifyToUpdateSubject : SessionEvent()
 }
 ```
 
@@ -1655,6 +1713,6 @@ This repository is a personal study and learning adaptation of that work.
 ![Kotlin](https://img.shields.io/badge/Made%20with-Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Built%20with-Jetpack%20Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)
 
-**Last Updated:** March 13, 2026 | **Version:** 1.1
+**Last Updated:** March 17, 2026 | **Version:** 1.0
 
 </div>

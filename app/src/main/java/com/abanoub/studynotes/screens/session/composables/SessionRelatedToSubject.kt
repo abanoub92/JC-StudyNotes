@@ -18,7 +18,8 @@ import com.abanoub.studynotes.R
 fun LazyListScope.sessionRelatedToSubject(
     modifier: Modifier,
     relatedToSubject: String,
-    onSelectSubjectButtonClick: () -> Unit
+    onSelectSubjectButtonClick: () -> Unit,
+    seconds: String
 ){
 
     item {
@@ -42,6 +43,7 @@ fun LazyListScope.sessionRelatedToSubject(
                 )
 
                 IconButton(
+                    enabled = seconds == "00",
                     onClick = onSelectSubjectButtonClick
                 ) {
                     Icon(

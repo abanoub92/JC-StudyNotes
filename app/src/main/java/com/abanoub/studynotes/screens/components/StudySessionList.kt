@@ -25,6 +25,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.abanoub.studynotes.R
 import com.abanoub.studynotes.domain.model.Session
+import com.abanoub.studynotes.util.changeMillisToDateString
+import kotlin.time.Duration.Companion.hours
 
 fun LazyListScope.studySessionList(
     title: String,
@@ -103,7 +105,7 @@ private fun StudySessionCard(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "${session.date}",
+                    text = session.date.changeMillisToDateString(),
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -111,7 +113,7 @@ private fun StudySessionCard(
             Spacer(modifier = Modifier.weight(1f))
 
             Text(
-                text = "${session.duration} hr",
+                text = "${session.duration.hours} hr",
                 style = MaterialTheme.typography.titleMedium
             )
 
